@@ -1,5 +1,6 @@
 import { PrismaClient, User } from '@prisma/client';
-import { BadRequestException } from '@nestjs/common';
+import { CoreException } from '../../common/core.exception';
+import { ErrorCode } from '../../common/error.code';
 
 // UserDao 타입 정의
 export interface UserDao {
@@ -14,7 +15,7 @@ const userDaoImpl = (prisma: PrismaClient): UserDao => {
       });
 
       if (!result) {
-        throw new BadRequestException('User not found');
+        throw new CoreException(ErrorCode.USER_NOT_FOUND);
       }
 
       return result;
