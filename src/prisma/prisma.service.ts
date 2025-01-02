@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { UserDao, userExtension } from './extensions/user.extension';
-import { AccountDao, accountExtension } from './extensions/account.extension';
+import { AccountDao, accountExtension, UserDao, userExtension } from './extensions';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
