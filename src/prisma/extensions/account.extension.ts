@@ -1,14 +1,15 @@
 import { Account, PrismaClient, Provider } from '@prisma/client';
+import { BadRequestException } from '@nestjs/common';
 
 // UserDao 타입 정의
 export interface AccountDao {
-  findByEmail(userId: string, provider: Provider): Promise<Account | null>;
+  findByEmailOrThrow(userId: string, provider: Provider): Promise<Account | Error>;
 }
 
 const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
   return {
-    findByEmail: async (userId: string, provider: Provider) => {
-      return prisma.account.findUnique({
+    findByEmailOrThrow: async (userId: string, provider: Provider) => {
+      const result = await prisma.account.findUnique({
         where: {
           userId_provider: {
             userId,
@@ -16,6 +17,10 @@ const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
           },
         },
       });
+      if (!result) {
+        throw new BadRequestException('Account not found');
+      }
+      return result;
     },
   };
 };
@@ -24,7 +29,7 @@ const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
 export const accountExtension = (prisma: PrismaClient) => {
   return prisma.$extends({
     client: {
-      user: accountDaoImpl(prisma),
+      account: accountDaoImpl(prisma),
     },
   });
 };
