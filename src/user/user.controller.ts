@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Post } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ResponseDto } from '../common/response.dto';
 
@@ -14,7 +14,12 @@ export class UserController {
 
   @Get('/builder')
   async test() {
-    return ResponseDto.builder().setData('test').setStatus(201).setMessage('responseDto 테스트').build();
+    const result = 'test';
+    return ResponseDto.builder<typeof result>()
+      .setData(result)
+      .setStatus(201)
+      .setMessage('responseDto 테스트')
+      .build();
   }
 
   @Get('/responseDto')

@@ -1,28 +1,20 @@
 export class ResponseDto<T> {
-  status: number;
-  message: string;
-  data: T | null;
-
-  constructor(status: number, message: string, data?: T) {
-    this.status = status;
-    this.message = message;
-    this.data = data ?? null;
-  }
+  constructor(
+    private readonly status: number,
+    private readonly message: string,
+    private readonly data?: T,
+  ) {}
 
   static success<T>(data: T, message = 'ok', status = 200): ResponseDto<T> {
     return new ResponseDto<T>(status, message, data);
   }
 
-  static builder() {
+  static builder<T>() {
     // Builder 클래스를 내부에 숨김 (클로저 방식)
-    class Builder<T> {
+    class Builder {
       public status: number = 200;
       public message: string = 'ok';
-      public data: T | null = null;
-
-      constructor(Data?: T) {
-        this.data = Data ?? null;
-      }
+      public data?: T;
 
       setStatus(status: number): this {
         this.status = status;

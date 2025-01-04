@@ -12,10 +12,12 @@ export class CoreException extends Error {
     status?: HttpStatus,
   ) {
     if (typeof errorCodeOrMessage === 'object') {
-      super(errorCodeOrMessage.message);
-      this.status = errorCodeOrMessage.status;
-      this.code = errorCodeOrMessage.code;
-      this.errorMessage = errorCodeOrMessage.message;
+      const { status, message, code } = errorCodeOrMessage;
+
+      super(message);
+      this.status = status;
+      this.code = code;
+      this.errorMessage = message;
     } else {
       super(errorCodeOrMessage);
       this.status = status || HttpStatus.INTERNAL_SERVER_ERROR;
