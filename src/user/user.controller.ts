@@ -9,21 +9,17 @@ export class UserController {
   @Post('/sign-up')
   async signUp() {
     const result = await this.userService.createUser();
-    return ResponseDto.success(result, '회원가입 성공', 200);
+    return ResponseDto.success(result);
   }
 
   @Get('/builder')
   async test() {
     const result = 'test';
-    return ResponseDto.builder<typeof result>()
-      .setData(result)
-      .setStatus(201)
-      .setMessage('responseDto 테스트')
-      .build();
+    return ResponseDto.builder<typeof result>().setData(result).build();
   }
 
   @Get('/responseDto')
   async responseDto() {
-    return ResponseDto.success('test', 'responseDto 테스트', 201);
+    return ResponseDto.success('test', 'SignUp Successfully', 201);
   }
 }

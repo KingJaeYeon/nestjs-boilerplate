@@ -1,11 +1,13 @@
+import { HttpStatus } from '@nestjs/common';
+
 export class ResponseDto<T> {
   constructor(
-    private readonly status: number,
+    private readonly status: HttpStatus,
     private readonly message: string,
     private readonly data?: T,
   ) {}
 
-  static success<T>(data: T, message = 'ok', status = 200): ResponseDto<T> {
+  static success<T>(data: T, message = 'ok', status: HttpStatus = 200): ResponseDto<T> {
     return new ResponseDto<T>(status, message, data);
   }
 
