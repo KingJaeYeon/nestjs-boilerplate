@@ -2,27 +2,27 @@ import { ErrorCode } from './error.code';
 import { HttpStatus } from '@nestjs/common';
 
 export class CoreException extends Error {
-  readonly status: HttpStatus;
-  readonly code: string;
-  readonly errorMessage: string;
+  readonly status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+  readonly code: string = 'UNKNOWN_ERROR';
+  readonly message: string;
 
   constructor(
     errorCodeOrMessage: (typeof ErrorCode)[keyof typeof ErrorCode] | string,
     code?: string,
     status?: HttpStatus,
   ) {
-    if (typeof errorCodeOrMessage === 'object') {
-      const { status, message, code } = errorCodeOrMessage;
+    const isMessageObj = typeof errorCodeOrMessage === 'object';
+    super(isMessageObj ? errorCodeOrMessage.message : errorCodeOrMessage);
 
-      super(message);
+    if (isMessageObj) {
+      const { status, message, code } = errorCodeOrMessage;
       this.status = status;
       this.code = code;
-      this.errorMessage = message;
+      this.message = message;
     } else {
-      super(errorCodeOrMessage);
-      this.status = status || HttpStatus.INTERNAL_SERVER_ERROR;
-      this.code = code || 'UNKNOWN_ERROR';
-      this.errorMessage = errorCodeOrMessage;
+      this.status = status || this.status;
+      this.code = code || this.code;
+      this.message = errorCodeOrMessage;
     }
   }
 }
