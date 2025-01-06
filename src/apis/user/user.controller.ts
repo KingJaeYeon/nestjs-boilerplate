@@ -10,7 +10,7 @@ export class UserController {
   @Post('signup')
   async signUp(@Body() data: SignupDto) {
     const result = await this.userService.createUser(data);
-    return ResponseDto.success(result);
+    return ResponseDto.success(result, 'Create user successfully');
   }
 
   @Get('/builder')

@@ -9,12 +9,7 @@ import { AuthModule } from './apis/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
-    PrismaModule,
-    UserModule,
-    AuthModule,
-  ],
+  imports: [ConfigModule.forRoot(), PrismaModule, UserModule, AuthModule],
   controllers: [AppController],
   providers: [
     AppService,

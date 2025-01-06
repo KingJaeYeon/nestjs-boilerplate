@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 
 // const pwdPattern = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,16}$/;
 
