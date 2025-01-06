@@ -1,28 +1,23 @@
-import { Account, PrismaClient, Provider } from '@prisma/client';
-import { BadRequestException } from '@nestjs/common';
+import { Account, PrismaClient, User } from '@prisma/client';
 import { CoreException, ErrorCode } from '../../exception';
 
 // UserDao 타입 정의
 export interface AccountDao {
-  findByEmailOrThrow(userId: string, provider: Provider): Promise<Account | Error>;
-  throwIfEmailExists(email: string): Promise<void | Error>;
+  findByEmailOrThrow(email: string): Promise<Account & { user: User }>;
+  throwIfEmailExists(email: string): Promise<void>;
 }
 
 const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
   return {
-    findByEmailOrThrow: async (userId: string, provider: Provider) => {
-      const result = await prisma.account.findUnique({
-        where: {
-          userId_provider: {
-            userId,
-            provider,
-          },
-        },
+    findByEmailOrThrow: async (email: string) => {
+      const account = await prisma.account.findFirst({
+        where: { accountId: email },
+        include: { user: true },
       });
-      if (!result) {
-        throw new BadRequestException('Account not found');
+      if (!account) {
+        throw new CoreException(ErrorCode.USER_NOT_FOUND);
       }
-      return result;
+      return account;
     },
     throwIfEmailExists: async (email: string) => {
       const result = await prisma.account.findFirst({
