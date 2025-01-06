@@ -17,25 +17,26 @@ model Account {
   id        String   @id @default(cuid())
   userId    String
   provider  Provider @default(LOCAL)
-  accountId String?  @default("")
-  secret    String?  @default("")
+  accountId String
+  secret    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, provider])
+  @@index([accountId])
   @@map("accounts")
 }
 
 model User {
-  id       String    @id @default(cuid())
-  nickname String
-  icon     String
+  id        String   @id @default(cuid())
+  nickname  String?
+  icon      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Account  Account[]
+  account Account[]
 
   @@map("users")
 }

@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 // UserDao 타입 정의
 export interface AccountDao {
   findByEmailOrThrow(userId: string, provider: Provider): Promise<Account | Error>;
+  throwIfEmailExists(email: string): Promise<void | Error>;
 }
 
 const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
@@ -21,6 +22,14 @@ const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
         throw new BadRequestException('Account not found');
       }
       return result;
+    },
+    throwIfEmailExists: async (email: string) => {
+      const result = await prisma.account.findFirst({
+        where: { accountId: email },
+      });
+      if (result) {
+        throw new BadRequestException('Email already exists');
+      }
     },
   };
 };

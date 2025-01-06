@@ -1,20 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SignupDto } from './dto';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly authService: AuthService,
+  ) {}
 
   async createUser(data: SignupDto) {
-    console.log(data);
-    const user = await this.db.userDao.findByIdOrThrow('cm5ahxxle0000ad09p74d7ix81');
-    console.log('userDao:', user);
-    // const account = await this.db.accountDao.findByEmailOrThrow(
-    //   'cm5ahxxle0000ad09p74d7ix8',
-    //   Provider.LOCAL,
-    // );
-    // console.log(account);
-    return user;
+    const { email, password } = data;
+
+    await this.db.accountDao.throwIfEmailExists(email);
+    const hashedPassword = await this.authService.hashPassword(password);
+
+    return this.db.user.create({
+      select: { id: true },
+      data: {
+        account: {
+          create: {
+            accountId: email,
+            secret: hashedPassword,
+          },
+        },
+      },
+    });
   }
 }
