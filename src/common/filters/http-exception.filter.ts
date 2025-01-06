@@ -12,6 +12,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof CoreException) {
       response.status(exception.status).json({
         ...exception,
+        message: exception.message,
         requestUrl: request.url,
       });
     } else {

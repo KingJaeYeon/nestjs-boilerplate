@@ -1,5 +1,6 @@
 import { Account, PrismaClient, Provider } from '@prisma/client';
 import { BadRequestException } from '@nestjs/common';
+import { CoreException, ErrorCode } from '../../exception';
 
 // UserDao 타입 정의
 export interface AccountDao {
@@ -28,7 +29,7 @@ const accountDaoImpl = (prisma: PrismaClient): AccountDao => {
         where: { accountId: email },
       });
       if (result) {
-        throw new BadRequestException('Email already exists');
+        throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
       }
     },
   };
