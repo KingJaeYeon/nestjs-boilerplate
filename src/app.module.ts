@@ -6,9 +6,15 @@ import { UserModule } from './apis/user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AuthModule } from './apis/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PrismaModule, UserModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    PrismaModule,
+    UserModule,
+    AuthModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

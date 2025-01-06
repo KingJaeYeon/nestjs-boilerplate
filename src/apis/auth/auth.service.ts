@@ -3,14 +3,14 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { CoreException, ErrorCode } from '../../common/exception';
-import { JwtService } from '@nestjs/jwt';
+// import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly db: PrismaService,
-    private readonly jwtService: JwtService,
+    // private readonly jwtService: JwtService,
   ) {}
 
   async hashPassword(password: string): Promise<string> {
@@ -30,18 +30,19 @@ export class AuthService {
 
     return { user, token };
   }
-
   async generateToken({ userId }: { userId: string }) {
-    const access = this.jwtService.sign(
-      { userId }, //
-      { expiresIn: '1h' },
-    );
+    const access = '1234';
+    // this.jwtService.sign(
+    //   { userId }, //
+    //   { expiresIn: '1h' },
+    // );
 
     const random = Math.random().toString(36).slice(2, 13);
-    const refresh = this.jwtService.sign(
-      { random }, //
-      { expiresIn: '7d' },
-    );
+    const refresh = '1234';
+    // this.jwtService.sign(
+    //   { random }, //
+    //   { expiresIn: '7d' },
+    // );
 
     // db에 refresh token 저장 로직 추가 (선택사항)
     return { access, refresh };
@@ -67,6 +68,25 @@ export class AuthService {
       path: '/auth/refresh',
     });
   }
+  clearAuthCookies(res: Response) {
+    const baseOptions: CookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined,
+    };
 
-  destroyAuthCookies(res: Response) {}
+    res.cookie('access', '', {
+      ...baseOptions,
+      sameSite: 'lax',
+      path: '/',
+      expires: new Date(0),
+    });
+
+    res.cookie('refresh', '', {
+      ...baseOptions,
+      sameSite: 'strict',
+      path: '/auth/refresh',
+      expires: new Date(0),
+    });
+  }
 }

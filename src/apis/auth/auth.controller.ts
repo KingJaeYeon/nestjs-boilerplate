@@ -12,8 +12,8 @@ export class AuthController {
 
   @Post('login')
   async login(@Res() res: Response, @Body() data: LoginDto) {
-    const { token, user } = await this.authService.login(data);
-    this.authService.setAuthCookies(res, token);
-    return ResponseDto.success(user.id, 'Login Successfully', 200);
+    // const { token, user } = await this.authService.login(data);
+    // this.authService.setAuthCookies(res, token);
+    return ResponseDto.success('user.id', 'Login Successfully');
   }
 }
