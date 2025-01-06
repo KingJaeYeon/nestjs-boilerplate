@@ -1,6 +1,5 @@
 import { PrismaClient, User } from '@prisma/client';
-import { CoreException } from '../../common/exception/core.exception';
-import { ErrorCode } from '../../common/exception/error.code';
+import { CoreException, ErrorCode } from '../../exception';
 
 // UserDao 타입 정의
 export interface UserDao {

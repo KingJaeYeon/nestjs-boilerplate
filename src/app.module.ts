@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './user/user.module';
+import { PrismaModule } from './common/prisma/prisma.module';
+import { UserModule } from './apis/user/user.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './apis/auth/auth.module';
 
 @Module({
   imports: [PrismaModule, UserModule, AuthModule],
