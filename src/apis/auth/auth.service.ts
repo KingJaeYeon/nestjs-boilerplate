@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { CoreException, ErrorCode } from '../../common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
+import { AUTHORIZATION, REFRESH } from '../../common/constants';
 
 @Injectable()
 export class AuthService {
@@ -56,12 +57,12 @@ export class AuthService {
       domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined,
     };
 
-    res.cookie('access', access, {
+    res.cookie(AUTHORIZATION, access, {
       ...baseOptions,
       sameSite: 'lax',
       path: '/',
     });
-    res.cookie('refresh', refresh, {
+    res.cookie(REFRESH, refresh, {
       ...baseOptions,
       sameSite: 'strict',
       path: '/auth/refresh',
@@ -76,13 +77,13 @@ export class AuthService {
       expires: new Date(0),
     };
 
-    res.cookie('access', '', {
+    res.cookie(AUTHORIZATION, '', {
       ...baseOptions,
       sameSite: 'lax',
       path: '/',
     });
 
-    res.cookie('refresh', '', {
+    res.cookie(REFRESH, '', {
       ...baseOptions,
       sameSite: 'strict',
       path: '/auth/refresh',
