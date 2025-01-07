@@ -1,5 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { ResponseDto } from '../response.dto';
+import { ResponseDto } from '@/common/response.dto';
 import { map, Observable } from 'rxjs';
 
 // NestJS는 기본적으로 return 키워드로 데이터를 반환하고, 이를 "Interceptor"에서 가로채어 응답한다.

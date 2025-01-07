@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../../common/prisma/prisma.service';
+import { PrismaService } from '@/common/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
-import { CoreException, ErrorCode } from '../../common/exception';
+import { CoreException, ErrorCode } from '@/common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
-import { AUTHORIZATION, REFRESH } from '../../common/constants';
+import { AUTHORIZATION, REFRESH } from '@/common/constants';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +20,7 @@ export class AuthService {
 
   async login(data: LoginDto) {
     const { email, password } = data;
+
     const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
 
     const isValidPassword = await bcrypt.compare(password, account.secret);
