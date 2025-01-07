@@ -4,6 +4,7 @@ import { CoreException, ErrorCode } from '@/common/exception';
 // UserDao 타입 정의
 export interface AccountDao {
   findByEmailOrThrow(email: string): Promise<Account & { user: User }>;
+
   throwIfEmailExists(email: string): Promise<void>;
 }
 

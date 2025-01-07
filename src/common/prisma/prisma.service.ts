@@ -12,9 +12,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     this.userDao = userExtension(this).user;
     this.accountDao = accountExtension(this).account;
   }
+
   async onModuleInit() {
     await this.$connect();
   }
+
   async onModuleDestroy() {
     await this.$disconnect();
   }
