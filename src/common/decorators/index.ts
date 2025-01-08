@@ -1,1 +1,1 @@
-export * from './match.validator.decorator';
+export * from './match-validator.decorator';

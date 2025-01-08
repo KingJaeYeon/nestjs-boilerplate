@@ -1,8 +1,8 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 import { ResponseDto } from '@/common/response.dto';
-import { Response, Request } from 'express';
+import { Request, Response } from 'express';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -10,11 +10,12 @@ export class AuthController {
     private readonly authService: AuthService, //
   ) {}
 
+  @UseGuards(AuthGuard('local'))
   @Post('login')
-  async login(@Res() res: Response, @Body() data: LoginDto) {
-    const { token, user } = await this.authService.login(data);
+  async login(@Req() req: Request & { user: any }, @Res() res: Response) {
+    const token = await this.authService.generateToken(req.user.id);
     this.authService.setAuthCookies(res, token);
-    return res.json(ResponseDto.success({ id: user.id }, 'Login Successful', 201));
+    return res.json(ResponseDto.success({ id: req.user.id }, 'Login Successful', 201));
   }
 
   @Post('logout')
