@@ -13,7 +13,7 @@ export class AuthController {
 
   @UseGuards(DynamicStrategyGuard(StrategyType.LOCAL))
   @Post('login')
-  async login(@Req() req: Request & { user: any }, @Res() res: Response) {
+  async login(@Req() req: Request, @Res() res: Response) {
     const token = await this.authService.generateToken(req.user.id);
     this.authService.setAuthCookies(res, token);
     return res.json(ResponseDto.success({ id: req.user.id }, 'Login Successful', 201));
