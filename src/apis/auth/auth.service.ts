@@ -18,28 +18,14 @@ export class AuthService {
     return bcrypt.hash(password, 10);
   }
 
-  async validateLocalUser(email: string, password: string) {
+  async validateLocalUser(data: LoginDto) {
+    const { email, password } = data;
     const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
     const isValidPassword = await bcrypt.compare(password, account.secret);
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.USER_INVALID_PASSWORD);
     }
     return user;
-  }
-
-  async login(data: LoginDto) {
-    const { email, password } = data;
-
-    const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
-
-    const isValidPassword = await bcrypt.compare(password, account.secret);
-    if (!isValidPassword) {
-      throw new CoreException(ErrorCode.USER_INVALID_PASSWORD);
-    }
-
-    const token = await this.generateToken({ userId: user.id });
-
-    return { user, token };
   }
 
   async generateToken({ userId }: { userId: string }) {

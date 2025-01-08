@@ -4,7 +4,11 @@ export class LoginDto {
   @IsEmail()
   email: string;
 
-  // @Matches(pwdPattern)
   @IsString()
   password: string;
+
+  constructor(email: string, password: string) {
+    this.email = email;
+    this.password = password;
+  }
 }
