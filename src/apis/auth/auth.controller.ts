@@ -2,7 +2,8 @@ import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ResponseDto } from '@/common/response.dto';
 import { Request, Response } from 'express';
-import { AuthGuard } from '@nestjs/passport';
+import { StrategyType } from '@/common/constants';
+import { DynamicStrategyGuard } from '@/apis/auth/strategy/dynamic-strategy.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -10,7 +11,7 @@ export class AuthController {
     private readonly authService: AuthService, //
   ) {}
 
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(DynamicStrategyGuard(StrategyType.LOCAL))
   @Post('login')
   async login(@Req() req: Request & { user: any }, @Res() res: Response) {
     const token = await this.authService.generateToken(req.user.id);

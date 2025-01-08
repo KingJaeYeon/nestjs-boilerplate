@@ -17,7 +17,15 @@ export class LocalStrategy extends PassportStrategy(Local) {
     try {
       await validateOrReject(dto);
     } catch (e) {
-      throw new CoreException('INVALID_INPUT', '', 400);
+      const messages = e.map((el: any) => el.constraints);
+
+      const msg = messages.reduce((acc: any, cur: any) => {
+        const key = Object.keys(cur)[0];
+        acc.push(cur[key]);
+        return acc;
+      }, []);
+
+      throw new CoreException(msg.join(', '), 'INVALID INPUT', 400);
     }
     return this.authService.validateLocalUser(dto);
   }

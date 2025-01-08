@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import { LoginDto } from './dto/login.dto';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
 import { AUTHORIZATION, REFRESH } from '@/common/constants';
+import { LoginDto } from '@/apis/auth/dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,12 +14,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
-  }
-
   async validateLocalUser(data: LoginDto) {
     const { email, password } = data;
+
     const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
     const isValidPassword = await bcrypt.compare(password, account.secret);
     if (!isValidPassword) {
@@ -84,5 +81,9 @@ export class AuthService {
       sameSite: 'strict',
       path: '/auth/refresh',
     });
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
   }
 }
