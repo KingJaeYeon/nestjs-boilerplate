@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { StrategyType } from '@/common/constants';
 import { DynamicStrategyGuard } from '@/apis/auth/strategy/dynamic-strategy.guard';
 
-@Controller('auth')
+@Controller('/api/v1/auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService, //

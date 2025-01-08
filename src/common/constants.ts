@@ -5,3 +5,8 @@ export enum StrategyType {
   JWT = 'jwt',
   LOCAL = 'local',
 }
+
+export enum RoleType {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
