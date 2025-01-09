@@ -12,21 +12,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const base = {
       timestamp: new Date().toISOString(),
       path: request.url,
+      status: 500,
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Internal Server Error',
     };
 
     if (exception instanceof CoreException) {
-      response.status(exception.status).json({
-        ...exception,
-        ...base,
-        message: exception.message,
-      });
-    } else {
-      response.status(500).json({
-        ...base,
-        status: 500,
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Internal Server Error',
-      });
+      base['status'] = exception.status;
+      base['code'] = exception.code;
+      base['message'] = exception.message;
     }
+
+    response.status(base.status).json(base);
   }
 }
