@@ -4,6 +4,7 @@ import { ResponseDto } from '@/common/response.dto';
 import { Request, Response } from 'express';
 import { StrategyType } from '@/common/constants';
 import { DynamicStrategyGuard } from '@/apis/auth/strategy/dynamic-strategy.guard';
+import { GetUser } from '@/common/decorators';
 
 @Controller('/api/v1/auth')
 export class AuthController {
@@ -13,10 +14,10 @@ export class AuthController {
 
   @UseGuards(DynamicStrategyGuard(StrategyType.LOCAL))
   @Post('login')
-  async login(@Req() req: Request, @Res() res: Response) {
-    const token = await this.authService.generateToken(req.user.id);
+  async login(@Res() res: Response, @GetUser('id') userId: string) {
+    const token = await this.authService.generateToken({ userId });
     this.authService.setAuthCookies(res, token);
-    return res.json(ResponseDto.success({ id: req.user.id }, 'Login Successful', 201));
+    return res.json(ResponseDto.success({ id: userId }, 'Login Successful', 201));
   }
 
   @Post('logout')

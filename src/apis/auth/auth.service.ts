@@ -16,7 +16,6 @@ export class AuthService {
 
   async validateLocalUser(data: LoginDto) {
     const { email, password } = data;
-
     const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
     const isValidPassword = await bcrypt.compare(password, account.secret);
     if (!isValidPassword) {
