@@ -18,7 +18,7 @@ Auth 함수는 여러 데코레이터를 한 번에 결합하여 JWT 인증과 *
 
 Auth(...roles: Role[]):
 	•	이 함수는 roles를 인자로 받아서 해당 역할(role)에 대한 권한을 설정합니다.
-	•	사용 시 @Auth('admin'), @Auth('user', 'moderator')처럼 특정 역할을 지정할 수 있습니다.
+	•	사용 시 @Auth('admin'), @Auth('users', 'moderator')처럼 특정 역할을 지정할 수 있습니다.
 
 applyDecorators:
 	•	여러 데코레이터를 조합하여 하나의 데코레이터로 반환합니다.
@@ -35,7 +35,7 @@ export class UserController {
   }
 
   @Post()
-  @Auth('user', 'admin') // user와 admin 모두 접근 가능
+  @Auth('users', 'admin') // user와 admin 모두 접근 가능
   createUser() {
     return 'Users or Admins can access this endpoint';
   }

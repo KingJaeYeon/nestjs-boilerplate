@@ -1,16 +1,17 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { UserService } from './user.service';
+import { UsersService } from './users.service';
 import { ResponseDto } from '@/common/response.dto';
 import { SignupDto } from './dto';
+import { Roles } from '@/apis/auth/decorators';
 
-@Controller('user')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
+@Controller('users')
+export class UsersController {
+  constructor(private readonly userService: UsersService) {}
 
   @Post('signup')
   async signUp(@Body() data: SignupDto) {
     const result = await this.userService.createUser(data);
-    return ResponseDto.success(result, 'Create user successfully');
+    return ResponseDto.success(result, 'Create  successfully');
   }
 
   @Get('/builder')
@@ -19,8 +20,9 @@ export class UserController {
     return ResponseDto.builder<typeof result>().setData(result).build();
   }
 
-  @Get('/responseDto')
-  async responseDto() {
-    return ResponseDto.success('test', 'SignUp Successfully', 201);
+  @Roles(['admin'])
+  @Get('/admin')
+  async adminTest() {
+    return ResponseDto.success('admin', 'admin test');
   }
 }

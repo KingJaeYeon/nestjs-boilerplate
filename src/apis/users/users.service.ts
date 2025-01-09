@@ -4,7 +4,7 @@ import { SignupDto } from './dto';
 import { AuthService } from '../auth/auth.service';
 
 @Injectable()
-export class UserService {
+export class UsersService {
   constructor(
     private readonly db: PrismaService,
     private readonly authService: AuthService,

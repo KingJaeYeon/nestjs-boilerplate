@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
-import { UserModule } from './apis/user/user.module';
+import { UsersModule } from './apis/users/users.module';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors';
 import { AuthModule } from './apis/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { RolesGuard } from '@/apis/auth/guards';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       { ttl: 60, limit: 60, skipIf: () => !!process.env.NODE_ENV === false },
     ]),
     PrismaModule,
-    UserModule,
+    UsersModule,
     AuthModule,
   ],
   controllers: [AppController],
@@ -24,6 +25,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     AppService,
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor }, //
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

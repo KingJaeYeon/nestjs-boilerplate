@@ -24,4 +24,10 @@ export class ErrorCode {
     code: 'USER-003',
     message: 'invalid password',
   };
+
+  static FORBIDDEN: IErrorCode = {
+    status: HttpStatus.FORBIDDEN,
+    code: 'AUTH-403',
+    message: 'insufficient permissions',
+  };
 }
