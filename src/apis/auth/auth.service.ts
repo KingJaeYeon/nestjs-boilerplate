@@ -4,8 +4,8 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
-import { AUTHORIZATION, REFRESH } from '@/common/constants';
-import { LoginDto } from '@/apis/auth/dto/login.dto';
+import { AUTHORIZATION, REFRESH } from '@/common/config';
+import { LoginDto } from '@/apis/auth/dto';
 
 @Injectable()
 export class AuthService {

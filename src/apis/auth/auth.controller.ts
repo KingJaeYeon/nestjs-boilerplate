@@ -2,8 +2,8 @@ import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ResponseDto } from '@/common/response.dto';
 import { Request, Response } from 'express';
-import { StrategyType } from '@/common/constants';
-import { DynamicStrategyGuard } from '@/apis/auth/strategy/dynamic-strategy.guard';
+import { StrategyType } from '@/common/config';
+import { DynamicStrategyGuard } from '@/apis/auth/strategy';
 import { GetUser } from '@/common/decorators';
 
 @Controller('/api/v1/auth')
