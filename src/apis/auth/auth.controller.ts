@@ -6,7 +6,7 @@ import { StrategyType } from '@/common/config';
 import { DynamicStrategyGuard } from '@/apis/auth/strategy';
 import { GetUser } from '@/common/decorators';
 
-@Controller('/api/v1/auth')
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService, //
@@ -14,16 +14,16 @@ export class AuthController {
 
   @UseGuards(DynamicStrategyGuard(StrategyType.LOCAL))
   @Post('login')
-  async login(@Res() res: Response, @GetUser('id') userId: string) {
+  async login(@Res({ passthrough: true }) res: Response, @GetUser('id') userId: string) {
     const token = await this.authService.generateToken({ userId });
     this.authService.setAuthCookies(res, token);
-    return res.json(ResponseDto.success({ id: userId }, 'Login Successful', 201));
+    return ResponseDto.success({ id: userId }, 'Login Successful', 201);
   }
 
   @Post('logout')
-  async logout(@Res() res: Response) {
+  async logout(@Res({ passthrough: true }) res: Response) {
     this.authService.clearAuthCookies(res);
-    return res.json(ResponseDto.success(null, 'Logout Successful', 201));
+    return ResponseDto.success(null, 'Logout Successful', 201);
   }
 
   @Post('refresh')
