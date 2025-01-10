@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
 import { AUTHORIZATION, REFRESH } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
+import { IUserPayload } from '@/apis/auth/interfaces';
 
 @Injectable()
 export class AuthService {
@@ -14,19 +15,24 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateLocalUser(data: LoginDto) {
+  async validateLocalUser(data: LoginDto): Promise<IUserPayload> {
     const { email, password } = data;
     const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
     const isValidPassword = await bcrypt.compare(password, account.secret);
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.USER_INVALID_PASSWORD);
     }
-    return user;
+    return {
+      id: user.id,
+      nickname: user.nickname,
+      email: account.accountId,
+      role: 'user',
+    };
   }
 
-  async generateToken({ userId }: { userId: string }) {
+  async generateToken(payload: IUserPayload) {
     const access = this.jwtService.sign(
-      { userId }, //
+      payload, //
       { expiresIn: '1h' },
     );
 

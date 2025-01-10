@@ -30,4 +30,10 @@ export class ErrorCode {
     code: 'AUTH-403',
     message: 'insufficient permissions',
   };
+
+  static UNAUTHORIZED: IErrorCode = {
+    status: HttpStatus.UNAUTHORIZED,
+    code: 'AUTH-401',
+    message: 'Unauthorized',
+  };
 }

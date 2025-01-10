@@ -2,9 +2,9 @@ import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ResponseDto } from '@/common/response.dto';
 import { Request, Response } from 'express';
-import { StrategyType } from '@/common/config';
-import { DynamicStrategyGuard } from '@/apis/auth/guards';
-import { GetUser } from '@/apis/auth/decorators';
+import { GetUser, Public } from '@/apis/auth/decorators';
+import { LocalAuthGuard } from '@/apis/auth/guards';
+import { IUserPayload } from '@/apis/auth/interfaces';
 
 @Controller('auth')
 export class AuthController {
@@ -12,12 +12,13 @@ export class AuthController {
     private readonly authService: AuthService, //
   ) {}
 
-  @UseGuards(DynamicStrategyGuard(StrategyType.LOCAL))
+  @Public()
+  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@GetUser('id') userId: string, @Res({ passthrough: true }) res: Response) {
-    const token = await this.authService.generateToken({ userId });
+  async login(@GetUser() payload: IUserPayload, @Res({ passthrough: true }) res: Response) {
+    const token = await this.authService.generateToken(payload);
     this.authService.setAuthCookies(res, token);
-    return ResponseDto.success({ id: userId }, 'Login Successful', 201);
+    return ResponseDto.success({ id: payload.id }, 'Login Successful', 201);
   }
 
   @Post('logout')

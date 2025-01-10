@@ -8,7 +8,7 @@ import { ResponseInterceptor } from './common/interceptors';
 import { AuthModule } from './apis/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { RolesGuard } from '@/apis/auth/guards';
+import { RolesGuard, JwtAuthGuard } from '@/apis/auth/guards';
 
 @Module({
   imports: [
@@ -23,9 +23,10 @@ import { RolesGuard } from '@/apis/auth/guards';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor }, //
+    { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
 export class AppModule {}

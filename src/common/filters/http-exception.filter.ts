@@ -1,6 +1,6 @@
 import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { CoreException } from '@/common/exception';
-import { Request, Response } from 'express';
+import e, { Request, Response } from 'express';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -12,9 +12,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const base = {
       timestamp: new Date().toISOString(),
       path: request.url,
-      status: 500,
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Internal Server Error',
+      status: exception?.status || 500,
+      code: exception?.response?.message || 'INTERNAL_SERVER_ERROR',
+      message: exception?.response?.message || 'Internal Server Error',
     };
 
     if (exception instanceof CoreException) {

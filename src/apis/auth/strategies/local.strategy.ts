@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy as Local } from 'passport-local';
 import { AuthService } from '@/apis/auth/auth.service';
-import { LoginDto } from '@/apis/auth/dto/login.dto';
+import { LoginDto } from '@/apis/auth/dto';
 import { validateOrReject } from 'class-validator';
 import { CoreException } from '@/common/exception';
+import { IUserPayload } from '@/apis/auth/interfaces';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Local) {
@@ -12,7 +13,7 @@ export class LocalStrategy extends PassportStrategy(Local) {
     super({ usernameField: 'email' });
   }
 
-  async validate(email: string, password: string): Promise<any> {
+  async validate(email: string, password: string): Promise<IUserPayload> {
     const dto = new LoginDto(email, password);
     try {
       await validateOrReject(dto);
