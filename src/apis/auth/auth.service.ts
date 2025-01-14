@@ -22,6 +22,7 @@ export class AuthService {
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.USER_INVALID_PASSWORD);
     }
+
     return {
       id: user.id,
       nickname: user.nickname,
