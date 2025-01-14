@@ -30,17 +30,18 @@ model Account {
 }
 
 model User {
-  id                String       @id @default(cuid())
-  nickname          String?
-  profilePictureUrl String       @default("https://github.com/shadcn.png")
-  isActive          Boolean      @default(true)
-  status            UserStatus   @default(ACTIVE)
-  role              UserRole     @default(USER)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  deletedAt         DateTime?
-  account           Account[]
-  UserCoupon        UserCoupon[]
+  id         String       @id @default(cuid())
+  nickname   String?
+  password   String?
+  icon       String       @default("https://github.com/shadcn.png")
+  isActive   Boolean      @default(true)
+  status     UserStatus   @default(ACTIVE)
+  role       UserRole     @default(USER)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  deletedAt  DateTime?
+  account    Account[]
+  UserCoupon UserCoupon[]
 
   @@map("users")
 }
