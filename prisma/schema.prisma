@@ -30,15 +30,48 @@ model Account {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  nickname  String?
-  icon      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  account Account[]
+  id                String       @id @default(cuid())
+  nickname          String?
+  profilePictureUrl String       @default("https://github.com/shadcn.png")
+  isActive          Boolean      @default(true)
+  status            UserStatus   @default(ACTIVE)
+  role              UserRole     @default(USER)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+  account           Account[]
+  UserCoupon        UserCoupon[]
 
   @@map("users")
+}
+
+model CouponCode {
+  id               Int          @id @default(autoincrement())
+  code             String
+  maxUses          Int?
+  usedCount        Int          @default(0)
+  teamRestrictions String?
+  amount           Decimal      @db.Decimal(18, 2)
+  description      String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  expiresAt        DateTime?
+  UserCoupon       UserCoupon[]
+}
+
+model UserCoupon {
+  id         Int          @id @default(autoincrement())
+  userId     String
+  couponId   Int
+  issuedAt   DateTime     @default(now()) // 지급된 시간
+  redeemedAt DateTime? // 사용된 시간 (null이면 사용되지 않음)
+  status     CouponStatus @default(UNUSED)
+
+  user   User       @relation(fields: [userId], references: [id])
+  coupon CouponCode @relation(fields: [couponId], references: [id])
+
+  @@index([userId])
+  @@index([couponId])
 }
 
 enum Provider {
@@ -47,4 +80,26 @@ enum Provider {
   APPLE
   TELEGRAM
   FACEBOOK
+}
+
+enum UserRole {
+  SUDO
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  PENDING // 대기 중 (승인 대기 등)
+  ACTIVE // 활성 사용자
+  REJECTED // 승인이 거절된 사용자
+  BLOCKED // 차단된 사용자
+  DELETED // 삭제된 사용자 (deletedAt 기준으로 영구삭제 텀)
+  DORMANT // 휴면 사용자
+  WITHDRAWN // 탈퇴한 사용자
+}
+
+enum CouponStatus {
+  UNUSED // 지급됨 (미사용)
+  REDEEMED // 사용 완료
+  EXPIRED // 만료됨
 }
