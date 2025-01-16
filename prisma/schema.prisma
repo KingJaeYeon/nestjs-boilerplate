@@ -13,12 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Account {
-  id        String   @id @default(cuid())
+model Identity {
+  id        Int      @id @default(autoincrement())
   userId    String
   provider  Provider @default(LOCAL)
-  accountId String
-  secret    String?
+  accountId String? // provider에서 제공하는 고유 ID or 로컬 계정의 이메일
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -40,7 +39,7 @@ model User {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   deletedAt  DateTime?
-  account    Account[]
+  identity   Identity[]
   UserCoupon UserCoupon[]
 
   @@map("users")
