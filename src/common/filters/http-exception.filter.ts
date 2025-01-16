@@ -1,6 +1,14 @@
 import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { CoreException } from '@/common/exception';
-import e, { Request, Response } from 'express';
+import { Request, Response } from 'express';
+
+interface IException {
+  status: number;
+  code: string;
+  message: string;
+  timestamp: string;
+  path: string;
+}
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -9,7 +17,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const base = {
+    const base: IException = {
       timestamp: new Date().toISOString(),
       path: request.url,
       status: exception?.status || 500,
