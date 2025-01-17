@@ -20,7 +20,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const base: IException = {
       timestamp: new Date().toISOString(),
       path: request.url,
-      status: exception?.status || 500,
+      status: exception?.status || 400,
       code: exception?.response?.message || 'INTERNAL_SERVER_ERROR',
       message: exception?.response?.message || 'Internal Server Error',
     };

@@ -36,11 +36,13 @@ model User {
   isActive   Boolean      @default(true)
   status     UserStatus   @default(ACTIVE)
   role       UserRole     @default(USER)
+  gender     Gender       @default(UNKNOWN)
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   deletedAt  DateTime?
   identity   Identity[]
   UserCoupon UserCoupon[]
+  AuditLog   AuditLog[]
 
   @@map("users")
 }
@@ -74,12 +76,30 @@ model UserCoupon {
   @@index([couponId])
 }
 
+// interceptor를 통해 시스템 로그를 남기기 위한 모델
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  event     String // evnet나 url 기입
+  title     String
+  data      Json
+  userId    String? // userId나 adminId 둘 중 하나는 선택
+  ipAddress String?
+  userAgent String?
+  timezone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
 enum Provider {
   LOCAL
   GOOGLE
   APPLE
   TELEGRAM
   FACEBOOK
+  ANONYMOUS // 익명 사용자 => 쇼핑몰 비회원 주문 등
 }
 
 enum UserRole {
@@ -102,4 +122,10 @@ enum CouponStatus {
   UNUSED // 지급됨 (미사용)
   REDEEMED // 사용 완료
   EXPIRED // 만료됨
+}
+
+enum Gender {
+  MALE
+  FEMAILE
+  UNKNOWN
 }
