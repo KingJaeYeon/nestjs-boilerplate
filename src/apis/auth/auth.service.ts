@@ -20,7 +20,7 @@ export class AuthService {
     const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
     const isValidPassword = await bcrypt.compare(password, account.secret);
     if (!isValidPassword) {
-      throw new CoreException(ErrorCode.USER_INVALID_PASSWORD);
+      throw new CoreException(ErrorCode.INVALID_PASSWORD);
     }
 
     return {

@@ -9,6 +9,7 @@ import { AuthModule } from './apis/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RolesGuard, JwtAuthGuard } from '@/apis/auth/guards';
+import { EmailVerificationModule } from './email-verification/email-verification.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RolesGuard, JwtAuthGuard } from '@/apis/auth/guards';
     PrismaModule,
     UsersModule,
     AuthModule,
+    EmailVerificationModule,
   ],
   controllers: [AppController],
   providers: [

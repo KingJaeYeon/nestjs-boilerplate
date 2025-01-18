@@ -7,6 +7,12 @@ export interface IErrorCode {
 }
 
 export class ErrorCode {
+  static NOT_FOUND: IErrorCode = {
+    status: HttpStatus.NOT_FOUND,
+    code: 'CODE-001',
+    message: 'not found',
+  };
+
   static USER_NOT_FOUND: IErrorCode = {
     status: HttpStatus.NOT_FOUND,
     code: 'USER-001',
@@ -19,21 +25,39 @@ export class ErrorCode {
     message: 'user already exists',
   };
 
-  static USER_INVALID_PASSWORD: IErrorCode = {
-    status: HttpStatus.BAD_REQUEST,
-    code: 'USER-003',
-    message: 'invalid password',
-  };
-
   static FORBIDDEN: IErrorCode = {
     status: HttpStatus.FORBIDDEN,
     code: 'AUTH-403',
     message: 'insufficient permissions',
   };
 
-  static UNAUTHORIZED: IErrorCode = {
+  static INVALID_PASSWORD: IErrorCode = {
+    status: HttpStatus.BAD_REQUEST,
+    code: 'AUTH-001',
+    message: 'invalid password',
+  };
+
+  static INVALID_ACCESS: IErrorCode = {
     status: HttpStatus.UNAUTHORIZED,
-    code: 'AUTH-401',
-    message: 'Unauthorized',
+    code: 'AUTH-002',
+    message: 'access token invalid',
+  };
+
+  static INVALID_REFRESH: IErrorCode = {
+    status: HttpStatus.UNAUTHORIZED,
+    code: 'AUTH-003',
+    message: 'refresh token invalid',
+  };
+
+  static INVALID_TOKEN: IErrorCode = {
+    status: HttpStatus.BAD_REQUEST,
+    code: 'AUTH-004',
+    message: 'token invalid',
+  };
+
+  static TOKEN_EXPIRED: IErrorCode = {
+    status: HttpStatus.BAD_REQUEST,
+    code: 'AUTH-005',
+    message: 'token expired',
   };
 }

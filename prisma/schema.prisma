@@ -14,37 +14,70 @@ datasource db {
 }
 
 model Identity {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  provider  Provider
+  accountId String // LOCAL = email, OAuth2 = 고유 ID
+  email     String // 제공자가 반환한 이메일 (확인용)
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, accountId])
+  @@index([userId])
+  @@map("identities")
+}
+
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  password          String?
+  nickname          String?
+  icon              String              @default("https://github.com/shadcn.png")
+  status            UserStatus          @default(ACTIVE)
+  role              UserRole            @default(USER)
+  gender            Gender              @default(UNKNOWN)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+  identity          Identity[]
+  UserCoupon        UserCoupon[]
+  AuditLog          AuditLog[]
+  EmailVerification EmailVerification[]
+  RefreshToken      RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique // 실제 Refresh Token 값
+  userId    String // User와의 관계
+  issuedAt  DateTime @default(now()) // 발급 시간
+  expiresAt DateTime // 만료 시간
+  revoked   Boolean  @default(false) // 토큰 회수 여부
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// 이메일 인증을 받기 위해 사용자가 받는 이메일 URL에 들어가는 token -> 삭제로직 필요
+model EmailVerification {
   id        Int      @id @default(autoincrement())
   userId    String
-  provider  Provider @default(LOCAL)
-  accountId String? // provider에서 제공하는 고유 ID or 로컬 계정의 이메일
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 
-  @@unique([userId, provider])
-  @@index([accountId])
-  @@map("accounts")
-}
-
-model User {
-  id         String       @id @default(cuid())
-  nickname   String?
-  password   String?
-  icon       String       @default("https://github.com/shadcn.png")
-  isActive   Boolean      @default(true)
-  status     UserStatus   @default(ACTIVE)
-  role       UserRole     @default(USER)
-  gender     Gender       @default(UNKNOWN)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  deletedAt  DateTime?
-  identity   Identity[]
-  UserCoupon UserCoupon[]
-  AuditLog   AuditLog[]
-
-  @@map("users")
+  @@map("email_verifications")
 }
 
 model CouponCode {
@@ -113,7 +146,6 @@ enum UserStatus {
   ACTIVE // 활성 사용자
   REJECTED // 승인이 거절된 사용자
   BLOCKED // 차단된 사용자
-  DELETED // 삭제된 사용자 (deletedAt 기준으로 영구삭제 텀)
   DORMANT // 휴면 사용자
   WITHDRAWN // 탈퇴한 사용자
 }
