@@ -9,7 +9,7 @@ import { AuthModule } from './apis/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RolesGuard, JwtAuthGuard } from '@/apis/auth/guards';
-import { VerificationModule } from './verification/verification.module';
+import { VerificationModule } from './apis/verification/verification.module';
 
 @Module({
   imports: [

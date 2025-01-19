@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import crypto from 'crypto';
-import { VerificationType } from '@prisma/client';
 import { addMinutes } from 'date-fns';
 import { CoreException, ErrorCode } from '@/common/exception';
-import { CreateTokenDto, TokenDto } from '@/verification/dto';
+import { CreateTokenDto, TokenDto } from '@/apis/verification/dto';
 
 @Injectable()
 export class VerificationService {
@@ -66,27 +65,32 @@ export class VerificationService {
   async verifyToken(query: TokenDto): Promise<void> {
     const { type, token } = query;
     const record = await this.db.verification.findUnique({
-      where: { token },
+      where: { token, type },
     });
 
     if (!record || record.type !== type) {
+      console.error(`Token not found or type mismatch. Token: ${token}, Type: ${type}`);
       throw new CoreException(ErrorCode.INVALID_TOKEN);
     }
 
     if (record.expiresAt < new Date()) {
+      console.error(`Token expired. Token: ${token}, Expired At: ${record.expiresAt}`);
       throw new CoreException(ErrorCode.TOKEN_EXPIRED);
     }
 
-    // 인증 완료 처리
-    await this.db.verification.update({
-      where: { id: record.id },
-      data: { verified: true },
-    });
+    await this.markTokenAsVerified(record.id);
   }
 
   async cleanExpiredTokens(): Promise<void> {
     await this.db.verification.deleteMany({
       where: { expiresAt: { lt: new Date() } },
+    });
+  }
+
+  private async markTokenAsVerified(id: number): Promise<void> {
+    await this.db.verification.update({
+      where: { id },
+      data: { verified: true },
     });
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { VerificationService } from '@/verification/verification.service';
+import { VerificationService } from '@/apis/verification/verification.service';
 
 @Injectable()
 export class VerificationCleanerService {
