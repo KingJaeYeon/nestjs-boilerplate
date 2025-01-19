@@ -54,6 +54,8 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique // 실제 Refresh Token 값
   userId    String // User와의 관계
+  ipAddress String? // IP 주소
+  userAgent String? // 디바이스/브라우저 정보
   issuedAt  DateTime @default(now()) // 발급 시간
   expiresAt DateTime // 만료 시간
   revoked   Boolean  @default(false) // 토큰 회수 여부

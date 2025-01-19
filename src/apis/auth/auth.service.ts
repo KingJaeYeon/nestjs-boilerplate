@@ -7,6 +7,7 @@ import { CookieOptions, Response } from 'express';
 import { AUTHORIZATION, REFRESH } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
 import { IUserPayload } from '@/apis/auth/interfaces';
+import { add } from 'date-fns';
 
 @Injectable()
 export class AuthService {
@@ -31,24 +32,55 @@ export class AuthService {
     };
   }
 
-  async generateToken(payload: IUserPayload) {
-    const access = this.jwtService.sign(
+  async generateTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
+    const accessToken = this.jwtService.sign(
       payload, //
       { expiresIn: '1h' },
     );
 
-    const random = Math.random().toString(36).slice(2, 13);
-    const refresh = this.jwtService.sign(
-      { random }, //
-      { expiresIn: '7d' },
-    );
+    const refreshToken = crypto.randomUUID();
 
     // db에 refresh token 저장 로직 추가 (선택사항)
-    return { access, refresh };
+    await this.db.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: payload.id,
+        expiresAt: add(new Date(), { days: 7 }), // 7일 후
+        userAgent,
+        ipAddress,
+      },
+    });
+    return { accessToken, refreshToken };
   }
 
-  setAuthCookies(res: Response, tokens: { access: string; refresh: string }) {
-    const { access, refresh } = tokens;
+  async rotateRefreshToken(refreshToken: string, ipAddress: string, userAgent: string) {
+    const storedToken = await this.db.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!storedToken || storedToken.revoked || storedToken.expiresAt < new Date()) {
+      throw new CoreException(ErrorCode.INVALID_REFRESH);
+    }
+
+    await this.db.refreshToken.update({
+      where: { id: storedToken.id },
+      data: { revoked: true },
+    });
+
+    const { user } = storedToken;
+    const payload: IUserPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      nickname: user.nickname,
+    };
+
+    return this.generateTokens(payload, ipAddress, userAgent);
+  }
+
+  setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }) {
+    const { accessToken, refreshToken } = tokens;
 
     const baseOptions: CookieOptions = {
       httpOnly: true,
@@ -56,12 +88,12 @@ export class AuthService {
       domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined,
     };
 
-    res.cookie(AUTHORIZATION, access, {
+    res.cookie(AUTHORIZATION, accessToken, {
       ...baseOptions,
       sameSite: 'lax',
       path: '/',
     });
-    res.cookie(REFRESH, refresh, {
+    res.cookie(REFRESH, refreshToken, {
       ...baseOptions,
       sameSite: 'strict',
       path: '/auth/refresh',
