@@ -6,64 +6,24 @@ export interface IErrorCode {
   status: HttpStatus;
 }
 
+const createErrorCode = (code: string, message: string, status: HttpStatus): IErrorCode => ({
+  code,
+  message,
+  status,
+});
+
 export class ErrorCode {
-  static NOT_FOUND: IErrorCode = {
-    status: HttpStatus.NOT_FOUND,
-    code: 'CODE-001',
-    message: 'not found',
-  };
+  static NOT_FOUND = createErrorCode('COMMON-001', 'error.common.not_found', HttpStatus.NOT_FOUND);
 
-  static USER_NOT_FOUND: IErrorCode = {
-    status: HttpStatus.NOT_FOUND,
-    code: 'USER-001',
-    message: 'user not found',
-  };
+  static USER_NOT_FOUND = createErrorCode('USER-001', 'error.user.not_found', HttpStatus.NOT_FOUND);
+  static USER_ALREADY_EXISTS = createErrorCode('USER-002', 'error.user.already_exists', HttpStatus.CONFLICT);
+  static EMAIL_DUPLICATED = createErrorCode('USER-003', 'error.user.email_duplicated', HttpStatus.CONFLICT);
 
-  static USER_ALREADY_EXISTS: IErrorCode = {
-    status: HttpStatus.CONFLICT,
-    code: 'USER-002',
-    message: 'user already exists',
-  };
+  static FORBIDDEN = createErrorCode('AUTH-001', 'error.auth.forbidden', HttpStatus.FORBIDDEN);
+  static INVALID_PASSWORD = createErrorCode('AUTH-002', 'error.auth.invalid_password', HttpStatus.BAD_REQUEST);
 
-  static EMAIL_DUPLICATED: IErrorCode = {
-    status: HttpStatus.CONFLICT,
-    code: 'USER-002',
-    message: 'email duplicated',
-  };
-
-  static FORBIDDEN: IErrorCode = {
-    status: HttpStatus.FORBIDDEN,
-    code: 'AUTH-403',
-    message: 'insufficient permissions',
-  };
-
-  static INVALID_PASSWORD: IErrorCode = {
-    status: HttpStatus.BAD_REQUEST,
-    code: 'AUTH-001',
-    message: 'invalid password',
-  };
-
-  static INVALID_ACCESS: IErrorCode = {
-    status: HttpStatus.UNAUTHORIZED,
-    code: 'AUTH-002',
-    message: 'access token invalid',
-  };
-
-  static INVALID_REFRESH: IErrorCode = {
-    status: HttpStatus.UNAUTHORIZED,
-    code: 'AUTH-003',
-    message: 'refresh token invalid',
-  };
-
-  static INVALID_TOKEN: IErrorCode = {
-    status: HttpStatus.BAD_REQUEST,
-    code: 'AUTH-004',
-    message: 'token invalid',
-  };
-
-  static TOKEN_EXPIRED: IErrorCode = {
-    status: HttpStatus.BAD_REQUEST,
-    code: 'AUTH-005',
-    message: 'token expired',
-  };
+  static INVALID_ACCESS = createErrorCode('TOKEN-001', 'error.token.invalid_access', HttpStatus.UNAUTHORIZED);
+  static INVALID_REFRESH: IErrorCode = createErrorCode('TOKEN-002', 'error.token.invalid_refresh', HttpStatus.UNAUTHORIZED);
+  static INVALID_TOKEN: IErrorCode = createErrorCode('TOKEN-003', 'error.token.invalid', HttpStatus.BAD_REQUEST);
+  static TOKEN_EXPIRED: IErrorCode = createErrorCode('TOKEN-004', 'error.token.expired', HttpStatus.BAD_REQUEST);
 }
