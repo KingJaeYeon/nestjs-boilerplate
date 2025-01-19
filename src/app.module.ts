@@ -9,7 +9,7 @@ import { AuthModule } from './apis/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RolesGuard, JwtAuthGuard } from '@/apis/auth/guards';
-import { EmailVerificationModule } from './email-verification/email-verification.module';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { EmailVerificationModule } from './email-verification/email-verification
     PrismaModule,
     UsersModule,
     AuthModule,
-    EmailVerificationModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [

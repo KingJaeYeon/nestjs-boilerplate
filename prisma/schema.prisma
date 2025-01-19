@@ -30,22 +30,22 @@ model Identity {
 }
 
 model User {
-  id                String              @id @default(cuid())
-  email             String              @unique
-  password          String?
-  nickname          String?
-  icon              String              @default("https://github.com/shadcn.png")
-  status            UserStatus          @default(ACTIVE)
-  role              UserRole            @default(USER)
-  gender            Gender              @default(UNKNOWN)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  deletedAt         DateTime?
-  identity          Identity[]
-  UserCoupon        UserCoupon[]
-  AuditLog          AuditLog[]
-  EmailVerification EmailVerification[]
-  RefreshToken      RefreshToken[]
+  id           String         @id @default(cuid())
+  email        String         @unique
+  password     String?
+  nickname     String?
+  icon         String         @default("https://github.com/shadcn.png")
+  status       UserStatus     @default(ACTIVE)
+  role         UserRole       @default(USER)
+  gender       Gender         @default(UNKNOWN)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  identity     Identity[]
+  UserCoupon   UserCoupon[]
+  AuditLog     AuditLog[]
+  RefreshToken RefreshToken[]
+  Verification Verification[]
 
   @@map("users")
 }
@@ -65,19 +65,19 @@ model RefreshToken {
 }
 
 // 이메일 인증을 받기 위해 사용자가 받는 이메일 URL에 들어가는 token -> 삭제로직 필요
-model EmailVerification {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  email     String
-  token     String   @unique
-  expiresAt DateTime
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Verification {
+  id        Int              @id @default(autoincrement())
+  type      VerificationType // 인증 요청의 유형
+  email     String // 요청 대상 이메일
+  userId    String? // 요청한 사용자 (선택적)
+  token     String           @unique // 고유 인증 토큰
+  expiresAt DateTime // 만료 시간
+  verified  Boolean          @default(false) // 인증 성공 여부
+  createdAt DateTime         @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
-  @@map("email_verifications")
+  @@map("verifications")
 }
 
 model CouponCode {
@@ -160,4 +160,10 @@ enum Gender {
   MALE
   FEMAILE
   UNKNOWN
+}
+
+enum VerificationType {
+  EMAIL_VERIFICATION // 이메일 인증
+  PASSWORD_RESET // 비밀번호 재설정
+  EMAIL_CHANGE // 이메일 변경
 }
