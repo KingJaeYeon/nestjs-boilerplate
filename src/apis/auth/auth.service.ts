@@ -17,8 +17,8 @@ export class AuthService {
 
   async validateLocalUser(data: LoginDto): Promise<IUserPayload> {
     const { email, password } = data;
-    const { user, ...account } = await this.db.accountDao.findByEmailOrThrow(email);
-    const isValidPassword = await bcrypt.compare(password, account.secret);
+    const user = await this.db.userDao.findByEmailOrThrow(email);
+    const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.INVALID_PASSWORD);
     }
@@ -26,7 +26,7 @@ export class AuthService {
     return {
       id: user.id,
       nickname: user.nickname,
-      email: account.accountId,
+      email: user.email,
       role: 'user',
     };
   }

@@ -25,6 +25,12 @@ export class ErrorCode {
     message: 'user already exists',
   };
 
+  static EMAIL_DUPLICATED: IErrorCode = {
+    status: HttpStatus.CONFLICT,
+    code: 'USER-002',
+    message: 'email duplicated',
+  };
+
   static FORBIDDEN: IErrorCode = {
     status: HttpStatus.FORBIDDEN,
     code: 'AUTH-403',

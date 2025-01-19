@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { SignupDto } from './dto';
 import { AuthService } from '../auth/auth.service';
+import { Provider } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -13,16 +14,19 @@ export class UsersService {
   async createUser(data: SignupDto) {
     const { email, password } = data;
 
-    await this.db.accountDao.throwIfEmailExists(email);
+    await this.db.userDao.throwIfEmailExists(email);
     const hashedPassword = await this.authService.hashPassword(password);
 
     return this.db.user.create({
       select: { id: true },
       data: {
-        account: {
+        email,
+        password: hashedPassword,
+        identity: {
           create: {
             accountId: email,
-            secret: hashedPassword,
+            email,
+            provider: Provider.LOCAL,
           },
         },
       },
