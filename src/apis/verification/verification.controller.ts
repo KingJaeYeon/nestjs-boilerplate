@@ -16,13 +16,20 @@ export class VerificationController {
 
   @Get('verify')
   async verify(@Query() query: TokenDto) {
-    await this.verificationService.verifyToken(query);
-    const redirectUrl = 'https://yourdomain.com/my/setting';
-    const urls = {
-      EMAIL_VERIFICATION: '',
-      PASSWORD_RESET: `https://yourdomain.com/signIn/update/password?token=${query.token}&redirect=${redirectUrl}`,
-      EMAIL_CHANGE: `https://yourdomain.com/signIn/update/email?token=${query.token}&redirect=${redirectUrl}`,
-    };
-    return ResponseDto.success({ redirectURL: urls[query.type] }, 'Email verified successfully.');
+    try {
+      await this.verificationService.verifyToken(query);
+      const redirectUrl = 'https://yourdomain.com/my/setting';
+      const urls = {
+        EMAIL_VERIFICATION: '',
+        PASSWORD_RESET: `https://yourdomain.com/signIn/update/password?token=${query.token}&redirect=${redirectUrl}`,
+        EMAIL_CHANGE: `https://yourdomain.com/signIn/update/email?token=${query.token}&redirect=${redirectUrl}`,
+      };
+      return ResponseDto.success({ redirectURL: urls[query.type] }, 'Email verified successfully.');
+    } catch {
+      return ResponseDto.success(
+        { redirectURL: 'https://yourdomain.com/my/setting', success: false },
+        'invalid url',
+      );
+    }
   }
 }
