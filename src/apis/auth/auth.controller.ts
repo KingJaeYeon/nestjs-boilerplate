@@ -6,6 +6,7 @@ import { GetUser, Public } from '@/apis/auth/decorators';
 import { LocalAuthGuard } from '@/apis/auth/guards';
 import { IUserPayload } from '@/apis/auth/interfaces';
 import { REFRESH } from '@/common/config';
+import { CoreException, ErrorCode } from '@/common/exception';
 
 @Public()
 @Controller('auth')
@@ -41,6 +42,11 @@ export class AuthController {
     @Ip() ipAddress: string,
   ) {
     const refreshToken = req.cookies[REFRESH];
+
+    if (!refreshToken) {
+      throw new CoreException(ErrorCode.INVALID_REFRESH);
+    }
+
     const token = await this.authService.rotateRefreshToken(refreshToken, ipAddress, userAgent);
     this.authService.setAuthCookies(res, token);
     return ResponseDto.success(null, 'RefreshToken rotated', 201);

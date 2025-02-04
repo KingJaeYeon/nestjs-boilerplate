@@ -35,7 +35,7 @@ export class AuthService {
   async generateTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
     const accessToken = this.jwtService.sign(
       payload, //
-      { expiresIn: '1h' },
+      { expiresIn: '5s' },
     );
 
     const refreshToken = crypto.randomUUID();
@@ -59,7 +59,17 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!storedToken || storedToken.revoked || storedToken.expiredAt < new Date()) {
+    if (!storedToken) {
+      throw new CoreException(ErrorCode.INVALID_REFRESH);
+    }
+
+    const invalidToken = storedToken.revoked || storedToken.expiredAt < new Date();
+    if (invalidToken) {
+      await this.db.refreshToken
+        .delete({
+          where: { id: storedToken.id },
+        })
+        .then((r) => console.log('>> invalidToken:: delete', r.id));
       throw new CoreException(ErrorCode.INVALID_REFRESH);
     }
 
