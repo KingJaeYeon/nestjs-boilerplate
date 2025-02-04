@@ -1,5 +1,5 @@
 import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
-import { CoreException } from '@/common/exception';
+import { CoreException, ErrorCode } from '@/common/exception';
 import { Request, Response } from 'express';
 
 interface IException {
@@ -17,6 +17,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    const validateError = ErrorCode[exception?.response?.message];
+
     const base: IException = {
       timestamp: new Date().toISOString(),
       path: request.url,
@@ -24,6 +26,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       code: exception?.response?.message || 'INTERNAL_SERVER_ERROR',
       message: exception?.response?.message || 'Internal Server Error',
     };
+    console.log(exception);
+    if (validateError) {
+      base['code'] = validateError.code;
+      base['message'] = validateError.message;
+      base['status'] = validateError.status;
+    }
 
     if (exception instanceof CoreException) {
       base['status'] = exception.status;

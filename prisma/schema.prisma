@@ -17,10 +17,10 @@ model Identity {
   id        Int       @id @default(autoincrement())
   userId    String
   provider  Provider
-  accountId String // LOCAL = email, OAuth2 = 고유 ID
+  accountId String    @map("account_id") // LOCAL = email, OAuth2 = 고유 ID
   email     String // 제공자가 반환한 이메일 (확인용)
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id])
 
@@ -38,14 +38,14 @@ model User {
   status       UserStatus     @default(ACTIVE)
   role         UserRole       @default(USER)
   gender       Gender         @default(UNKNOWN)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  deletedAt    DateTime?
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  deletedAt    DateTime?      @map("deleted_at")
   identity     Identity[]
-  UserCoupon   UserCoupon[]
-  AuditLog     AuditLog[]
-  RefreshToken RefreshToken[]
-  Verification Verification[]
+  userCoupon   UserCoupon[]
+  auditLog     AuditLog[]
+  refreshToken RefreshToken[]
+  verification Verification[]
 
   @@map("users")
 }
@@ -53,11 +53,11 @@ model User {
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   token     String   @unique // 실제 Refresh Token 값
-  userId    String // User와의 관계
-  ipAddress String? // IP 주소
-  userAgent String? // 디바이스/브라우저 정보
-  issuedAt  DateTime @default(now()) // 발급 시간
-  expiresAt DateTime // 만료 시간
+  userId    String   @map("user_id") // User와의 관계
+  ipAddress String?  @map("ip_address") // IP 주소
+  userAgent String?  @map("user_agent") // 디바이스/브라우저 정보
+  issuedAt  DateTime @default(now()) @map("issued_at") // 발급 시간
+  expiredAt DateTime @map("expired_at") // 만료 시간
   revoked   Boolean  @default(false) // 토큰 회수 여부
 
   user User @relation(fields: [userId], references: [id])
@@ -71,11 +71,11 @@ model Verification {
   id        Int              @id @default(autoincrement())
   type      VerificationType // 인증 요청의 유형
   email     String // 요청 대상 이메일
-  userId    String? // 요청한 사용자 (선택적)
+  userId    String?          @map("user_id") // 요청한 사용자 (선택적)
   token     String           @unique // 고유 인증 토큰
-  expiresAt DateTime // 만료 시간
+  expiredAt DateTime         @map("expired_at") // 만료 시간
   verified  Boolean          @default(false) // 인증 성공 여부
-  createdAt DateTime         @default(now())
+  createdAt DateTime         @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id])
 
@@ -85,23 +85,25 @@ model Verification {
 model CouponCode {
   id               Int          @id @default(autoincrement())
   code             String
-  maxUses          Int?
-  usedCount        Int          @default(0)
-  teamRestrictions String?
+  maxUses          Int?         @map("max_uses")
+  usedCount        Int          @default(0) @map("used_count")
+  teamRestrictions String?      @map("team_restrictions")
   amount           Decimal      @db.Decimal(18, 2)
   description      String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  expiresAt        DateTime?
-  UserCoupon       UserCoupon[]
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  expiredAt        DateTime?    @map("expired_at")
+  userCoupon       UserCoupon[]
+
+  @@map("coupon_codes")
 }
 
 model UserCoupon {
   id         Int          @id @default(autoincrement())
-  userId     String
-  couponId   Int
-  issuedAt   DateTime     @default(now()) // 지급된 시간
-  redeemedAt DateTime? // 사용된 시간 (null이면 사용되지 않음)
+  userId     String       @map("user_id")
+  couponId   Int          @map("coupon_id")
+  issuedAt   DateTime     @default(now()) @map("issued_at") // 지급된 시간
+  redeemedAt DateTime?    @map("redeemed_at") // 사용된 시간 (null이면 사용되지 않음)
   status     CouponStatus @default(UNUSED)
 
   user   User       @relation(fields: [userId], references: [id])
@@ -109,6 +111,7 @@ model UserCoupon {
 
   @@index([userId])
   @@index([couponId])
+  @@map("user_coupons")
 }
 
 // interceptor를 통해 시스템 로그를 남기기 위한 모델
@@ -117,15 +120,16 @@ model AuditLog {
   event     String // evnet나 url 기입
   title     String
   data      Json
-  userId    String? // userId나 adminId 둘 중 하나는 선택
-  ipAddress String?
-  userAgent String?
+  userId    String?  @map("user_id") // userId나 adminId 둘 중 하나는 선택
+  ipAddress String?  @map("id_address")
+  userAgent String?  @map("user_agent")
   timezone  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   user      User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
+  @@map("audit_logs")
 }
 
 enum Provider {

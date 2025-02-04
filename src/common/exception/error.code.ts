@@ -26,4 +26,6 @@ export class ErrorCode {
   static INVALID_REFRESH: IErrorCode = createErrorCode('TOKEN-002', 'error.token.invalid_refresh', HttpStatus.UNAUTHORIZED);
   static INVALID_TOKEN: IErrorCode = createErrorCode('TOKEN-003', 'error.token.invalid', HttpStatus.BAD_REQUEST);
   static TOKEN_EXPIRED: IErrorCode = createErrorCode('TOKEN-004', 'error.token.expired', HttpStatus.BAD_REQUEST);
+
+  static INVALIDATE_PASSWORD = createErrorCode('VALIDATE-001', 'error.auth.invalid_password', HttpStatus.BAD_REQUEST);
 }

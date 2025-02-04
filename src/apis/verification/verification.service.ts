@@ -55,7 +55,7 @@ export class VerificationService {
         email,
         userId,
         token,
-        expiresAt: addMinutes(new Date(), 30), // 30분 유효
+        expiredAt: addMinutes(new Date(), 30), // 30분 유효
       },
     });
 
@@ -73,8 +73,8 @@ export class VerificationService {
       throw new CoreException(ErrorCode.INVALID_TOKEN);
     }
 
-    if (record.expiresAt < new Date()) {
-      console.error(`Token expired. Token: ${token}, Expired At: ${record.expiresAt}`);
+    if (record.expiredAt < new Date()) {
+      console.error(`Token expired. Token: ${token}, Expired At: ${record.expiredAt}`);
       throw new CoreException(ErrorCode.TOKEN_EXPIRED);
     }
 
@@ -83,7 +83,7 @@ export class VerificationService {
 
   async cleanExpiredTokens(): Promise<void> {
     await this.db.verification.deleteMany({
-      where: { expiresAt: { lt: new Date() } },
+      where: { expiredAt: { lt: new Date() } },
     });
   }
 

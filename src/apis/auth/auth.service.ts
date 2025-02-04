@@ -45,7 +45,7 @@ export class AuthService {
       data: {
         token: refreshToken,
         userId: payload.id,
-        expiresAt: add(new Date(), { days: 7 }), // 7일 후
+        expiredAt: add(new Date(), { days: 7 }), // 7일 후
         userAgent,
         ipAddress,
       },
@@ -59,7 +59,7 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!storedToken || storedToken.revoked || storedToken.expiresAt < new Date()) {
+    if (!storedToken || storedToken.revoked || storedToken.expiredAt < new Date()) {
       throw new CoreException(ErrorCode.INVALID_REFRESH);
     }
 

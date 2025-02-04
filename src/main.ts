@@ -6,6 +6,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 
+const port = process.env.PORT ?? 7777;
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
@@ -22,7 +24,8 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  await app.listen(process.env.PORT ?? 7777);
+
+  await app.listen(port);
 }
 
-bootstrap().then(() => console.log('server init'));
+bootstrap().then(() => console.log('server init', port));
