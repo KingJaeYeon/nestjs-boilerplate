@@ -1,4 +1,4 @@
-import { Controller, Headers, Ip, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Headers, Ip, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ResponseDto } from '@/common/response.dto';
 import { Request, Response } from 'express';
@@ -27,6 +27,9 @@ export class AuthController {
     this.authService.setAuthCookies(res, token);
     return ResponseDto.success({ id: payload.id }, 'Login Successful', 201);
   }
+
+  @Get('google')
+  async googleLogin() {}
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {

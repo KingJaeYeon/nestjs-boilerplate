@@ -13,7 +13,7 @@ import { VerificationModule } from './apis/verification/verification.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     ThrottlerModule.forRoot([
       { ttl: 60, limit: 60, skipIf: () => !!process.env.NODE_ENV === false },
     ]),
