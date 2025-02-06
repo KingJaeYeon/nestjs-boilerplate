@@ -26,6 +26,10 @@ export class AuthService {
       where: accessId,
     });
 
+    if (!user) {
+      throw new CoreException(ErrorCode.USER_NOT_FOUND);
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.INVALID_PASSWORD);
@@ -43,20 +47,13 @@ export class AuthService {
 
   async findOrCreateOAuthUser(data: IOAuth) {
     const result: Partial<IUserPayload> = {};
-    let user: Partial<User> = {};
     // 1. 유저를 찾는다.
     // 2. 유저가 없다면 생성한다.
     // 3. 유저를 리턴한다.
 
-    // user = await this.db.identity.findUnique({
-    //   where: {
-    //     provider_accountId: {
-    //       provider: data.provider,
-    //       accountId: data.id,
-    //     },
-    //   },
-    //   include: { user: true },
-    // });
+    const user = await this.db.user.findUnique({
+      where: { email: data.email },
+    });
     //
     // const isNewUser = !user;
     //
