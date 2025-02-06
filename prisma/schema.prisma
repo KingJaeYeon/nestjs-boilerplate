@@ -18,7 +18,7 @@ model Identity {
   userId    String
   provider  Provider
   accountId String    @map("account_id") // LOCAL = email, OAuth2 = 고유 ID
-  email     String // 제공자가 반환한 이메일 (확인용)
+  email     String? // 제공자가 반환한 이메일 (확인용)
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
 
@@ -31,9 +31,12 @@ model Identity {
 
 model User {
   id           String         @id @default(cuid())
-  email        String         @unique
+  username     String         @unique
   password     String?
-  nickname     String?
+  email        String?        @unique
+  displayName  String?        @map("display_name")
+  familyName   String?        @map("family_name")
+  givenName    String?        @map("given_name")
   icon         String         @default("https://github.com/shadcn.png")
   status       UserStatus     @default(ACTIVE)
   role         UserRole       @default(USER)

@@ -7,6 +7,7 @@ import { LocalAuthGuard } from '@/apis/auth/guards';
 import { IUserPayload } from '@/apis/auth/interfaces';
 import { REFRESH } from '@/common/config';
 import { CoreException, ErrorCode } from '@/common/exception';
+import { GoogleAuthGuard } from '@/apis/auth/guards/google-auth.guard';
 
 @Public()
 @Controller('auth')
@@ -29,7 +30,22 @@ export class AuthController {
   }
 
   @Get('google')
+  @UseGuards(GoogleAuthGuard)
   async googleLogin() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleLoginCallback(
+    @GetUser() payload: IUserPayload,
+    @Res({ passthrough: true }) res: Response,
+    @Headers('userAgent') userAgent: string,
+    @Ip() ipAddress: string,
+  ) {
+    console.log('googleLoginCallback');
+    // const token = await this.authService.generateTokens(payload, userAgent, ipAddress);
+    // this.authService.setAuthCookies(res, token);
+    // return ResponseDto.success({ id: payload.id }, 'Login Successful', 201);
+  }
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {

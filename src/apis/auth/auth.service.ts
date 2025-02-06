@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { CoreException, ErrorCode } from '@/common/exception';
@@ -6,19 +6,26 @@ import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
 import { AUTHORIZATION, REFRESH } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
-import { IUserPayload } from '@/apis/auth/interfaces';
+import { IUserPayload, IOAuth, IVerifyToken } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly db: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
   async validateLocalUser(data: LoginDto): Promise<IUserPayload> {
-    const { email, password } = data;
-    const user = await this.db.userDao.findByEmailOrThrow(email);
+    const { username, password } = data;
+    const accessId = username.includes('@') ? { email: username } : { username };
+    const user = await this.db.user.findUnique({
+      where: accessId,
+    });
+
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.INVALID_PASSWORD);
@@ -26,10 +33,53 @@ export class AuthService {
 
     return {
       id: user.id,
-      nickname: user.nickname,
+      displayName: user.displayName,
+      name: { familyName: user.familyName, givenName: user.givenName },
+      icon: user.icon,
       email: user.email,
       role: user.role,
     };
+  }
+
+  async findOrCreateOAuthUser(data: IOAuth) {
+    const result: Partial<IUserPayload> = {};
+    let user: Partial<User> = {};
+    // 1. 유저를 찾는다.
+    // 2. 유저가 없다면 생성한다.
+    // 3. 유저를 리턴한다.
+
+    // user = await this.db.identity.findUnique({
+    //   where: {
+    //     provider_accountId: {
+    //       provider: data.provider,
+    //       accountId: data.id,
+    //     },
+    //   },
+    //   include: { user: true },
+    // });
+    //
+    // const isNewUser = !user;
+    //
+    // if (isNewUser) {
+    //   user = await this.db.user.create({
+    //     data: {
+    //       email: data.email,
+    //       displayName: data.displayName,
+    //       familyName: data.name.familyName,
+    //       givenName: data.name.givenName,
+    //       icon: data.icon,
+    //       role: RoleType.USER,
+    //       identity: {
+    //         create: {
+    //           email: data.email,
+    //           accountId: data.id,
+    //           provider: data.provider,
+    //         },
+    //       },
+    //     },
+    //   });
+    //   this.logger.log('New User Created', user.id);
+    // }
   }
 
   async generateTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
@@ -83,7 +133,9 @@ export class AuthService {
       id: user.id,
       email: user.email,
       role: user.role,
-      nickname: user.nickname,
+      displayName: user.displayName,
+      name: { familyName: user.familyName, givenName: user.givenName },
+      icon: user.icon,
     };
 
     return this.generateTokens(payload, ipAddress, userAgent);
@@ -133,5 +185,27 @@ export class AuthService {
 
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 10);
+  }
+
+  async verifiedToken(data: IVerifyToken): Promise<boolean | Error> {
+    const { authCode, email, type, userId } = data;
+    if (authCode === undefined) {
+      console.log('authCode is undefined');
+      throw new CoreException(ErrorCode.INVALID_TOKEN);
+    }
+
+    const token = await this.db.verification.findFirst({
+      where: { token: authCode, email, type, userId, verified: false },
+    });
+    if (!token) {
+      throw new CoreException(ErrorCode.INVALID_TOKEN);
+    }
+
+    const invalidToken = token.expiredAt < new Date();
+    if (invalidToken) {
+      throw new CoreException(ErrorCode.TOKEN_EXPIRED);
+    }
+
+    return true;
   }
 }

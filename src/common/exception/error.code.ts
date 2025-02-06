@@ -21,6 +21,7 @@ export class ErrorCode {
 
   static FORBIDDEN = createErrorCode('AUTH-001', 'error.auth.forbidden', HttpStatus.FORBIDDEN);
   static INVALID_PASSWORD = createErrorCode('AUTH-002', 'error.auth.invalid_password', HttpStatus.BAD_REQUEST);
+  static INVALIDATE_USERNAME = createErrorCode('AUTH-003', 'error.auth.invalid_username', HttpStatus.BAD_REQUEST);
 
   static INVALID_ACCESS = createErrorCode('TOKEN-001', 'error.token.invalid_access', HttpStatus.UNAUTHORIZED);
   static INVALID_REFRESH: IErrorCode = createErrorCode('TOKEN-002', 'error.token.invalid_refresh', HttpStatus.UNAUTHORIZED);

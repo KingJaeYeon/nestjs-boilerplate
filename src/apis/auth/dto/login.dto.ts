@@ -2,13 +2,13 @@ import { IsString } from 'class-validator';
 
 export class LoginDto {
   @IsString()
-  email: string;
+  username: string;
 
   @IsString()
   password: string;
 
-  constructor(email: string, password: string) {
-    this.email = email;
+  constructor(username: string, password: string) {
+    this.username = username;
     this.password = password;
   }
 }

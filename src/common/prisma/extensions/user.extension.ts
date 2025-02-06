@@ -8,6 +8,8 @@ export interface UserDao {
   findByEmailOrThrow(email: string): Promise<User>;
 
   throwIfEmailExists(email: string): Promise<void>;
+
+  throwIfUsernameExists(username: string): Promise<void>;
 }
 
 const userDaoImpl = (prisma: PrismaClient): UserDao => {
@@ -30,6 +32,12 @@ const userDaoImpl = (prisma: PrismaClient): UserDao => {
       const result = await prisma.user.findUnique({ where: { email } });
       if (result) {
         throw new CoreException(ErrorCode.EMAIL_DUPLICATED);
+      }
+    },
+    throwIfUsernameExists: async (username: string) => {
+      const result = await prisma.user.findUnique({ where: { username } });
+      if (result) {
+        throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
       }
     },
   };

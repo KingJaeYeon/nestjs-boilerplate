@@ -10,11 +10,11 @@ import { IUserPayload } from '@/apis/auth/interfaces';
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Local) {
   constructor(private authService: AuthService) {
-    super({ usernameField: 'email' });
+    super();
   }
 
-  async validate(email: string, password: string): Promise<IUserPayload> {
-    const dto = new LoginDto(email, password);
+  async validate(username: string, password: string): Promise<IUserPayload> {
+    const dto = new LoginDto(username, password);
     try {
       await validateOrReject(dto);
     } catch (e) {
