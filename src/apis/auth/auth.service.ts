@@ -8,7 +8,7 @@ import { AUTHORIZATION, REFRESH } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
 import { IUserPayload, IOAuth, IVerifyToken } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
-import { User } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -47,36 +47,72 @@ export class AuthService {
 
   async findOrCreateOAuthUser(data: IOAuth) {
     const result: Partial<IUserPayload> = {};
-    // 1. 유저를 찾는다.
-    // 2. 유저가 없다면 생성한다.
-    // 3. 유저를 리턴한다.
-
-    const user = await this.db.user.findUnique({
-      where: { email: data.email },
+    const identity = await this.db.identity.findUnique({
+      where: {
+        provider_accountId: {
+          provider: data.provider,
+          accountId: data.id,
+        },
+      },
+      include: { user: true },
     });
-    //
-    // const isNewUser = !user;
-    //
-    // if (isNewUser) {
-    //   user = await this.db.user.create({
-    //     data: {
-    //       email: data.email,
-    //       displayName: data.displayName,
-    //       familyName: data.name.familyName,
-    //       givenName: data.name.givenName,
-    //       icon: data.icon,
-    //       role: RoleType.USER,
-    //       identity: {
-    //         create: {
-    //           email: data.email,
-    //           accountId: data.id,
-    //           provider: data.provider,
-    //         },
-    //       },
-    //     },
-    //   });
-    //   this.logger.log('New User Created', user.id);
-    // }
+
+    result.id = identity.user.id;
+    result.email = identity.email;
+    result.role = identity.user.role;
+    result.displayName = identity.user.displayName;
+    result.name = { familyName: identity.user.familyName, givenName: identity.user.givenName };
+    result.icon = identity.user.icon;
+
+    const isNewProvider = !identity;
+    if (isNewProvider) {
+      const user = await this.db.user.findUnique({
+        where: { email: data.email },
+      });
+      result.id = user.id;
+      result.email = user.email;
+      result.role = user.role;
+      result.displayName = user.displayName;
+      result.name = { familyName: user.familyName, givenName: user.givenName };
+      result.icon = user.icon;
+
+      const isNewUser = !user;
+      if (isNewUser) {
+        const newUser = await this.db.user.create({
+          data: {
+            username: data.email,
+            email: data.email,
+            displayName: data.displayName,
+            familyName: data.name.familyName,
+            givenName: data.name.givenName,
+            icon: data.icon,
+            role: UserRole.USER,
+            identity: {
+              create: {
+                email: data.email,
+                accountId: data.id,
+                provider: data.provider,
+              },
+            },
+          },
+        });
+        result.id = newUser.id;
+        result.email = newUser.email;
+        result.role = newUser.role;
+        result.displayName = newUser.displayName;
+        result.name = { familyName: newUser.familyName, givenName: newUser.givenName };
+        result.icon = newUser.icon;
+      }
+      await this.db.identity.create({
+        data: {
+          email: data.email,
+          accountId: data.id,
+          provider: data.provider,
+          userId: user.id,
+        },
+      });
+    }
+    return result;
   }
 
   async generateTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
