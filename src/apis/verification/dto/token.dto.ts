@@ -8,4 +8,8 @@ export class TokenDto {
 
   @IsEnum(VerificationType)
   type: VerificationType;
+
+  @IsString()
+  @IsNotEmpty()
+  email: string;
 }
