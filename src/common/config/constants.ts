@@ -6,5 +6,5 @@ export const LOCAL = 'local';
 
 export enum RoleType {
   USER = 'USER',
-  ADMIN = 'ADMIN',
+  ADMIN = 'ADMIN'
 }
