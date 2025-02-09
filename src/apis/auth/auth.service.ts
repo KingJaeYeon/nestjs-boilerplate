@@ -8,7 +8,7 @@ import { AUTHORIZATION, REFRESH } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
 import { IUserPayload, IOAuth, IVerifyToken } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
-import { UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -16,14 +16,14 @@ export class AuthService {
 
   constructor(
     private readonly db: PrismaService,
-    private readonly jwtService: JwtService,
+    private readonly jwtService: JwtService
   ) {}
 
   async validateLocalUser(data: LoginDto): Promise<IUserPayload> {
     const { username, password } = data;
     const accessId = username.includes('@') ? { email: username } : { username };
     const user = await this.db.user.findUnique({
-      where: accessId,
+      where: accessId
     });
 
     if (!user) {
@@ -41,84 +41,55 @@ export class AuthService {
       name: { familyName: user.familyName, givenName: user.givenName },
       icon: user.icon,
       email: user.email,
-      role: user.role,
+      role: user.role
     };
   }
 
-  async findOrCreateOAuthUser(data: IOAuth) {
-    const result: Partial<IUserPayload> = {};
-    const identity = await this.db.identity.findUnique({
-      where: {
-        provider_accountId: {
-          provider: data.provider,
-          accountId: data.id,
-        },
-      },
-      include: { user: true },
+  async findOrCreateOAuthUser(data: IOAuth): Promise<IUserPayload> {
+    // 1. 기존  "OAuth identity"로 사용자 찾기
+    let user = await this.db.userDao.findByIdentity(data.provider, data.id);
+
+    if (user) {
+      return this.buildUserPayload(user);
+    }
+
+    // 2. 기존 이메일 계정 찾기
+    user = await this.db.user.findUnique({
+      where: { email: data.email }
     });
 
-    result.id = identity.user.id;
-    result.email = identity.email;
-    result.role = identity.user.role;
-    result.displayName = identity.user.displayName;
-    result.name = { familyName: identity.user.familyName, givenName: identity.user.givenName };
-    result.icon = identity.user.icon;
-
-    const isNewProvider = !identity;
-    if (isNewProvider) {
-      const user = await this.db.user.findUnique({
-        where: { email: data.email },
-      });
-      result.id = user.id;
-      result.email = user.email;
-      result.role = user.role;
-      result.displayName = user.displayName;
-      result.name = { familyName: user.familyName, givenName: user.givenName };
-      result.icon = user.icon;
-
-      const isNewUser = !user;
-      if (isNewUser) {
-        const newUser = await this.db.user.create({
-          data: {
-            username: data.email,
-            email: data.email,
-            displayName: data.displayName,
-            familyName: data.name.familyName,
-            givenName: data.name.givenName,
-            icon: data.icon,
-            role: UserRole.USER,
-            identity: {
-              create: {
-                email: data.email,
-                accountId: data.id,
-                provider: data.provider,
-              },
-            },
-          },
-        });
-        result.id = newUser.id;
-        result.email = newUser.email;
-        result.role = newUser.role;
-        result.displayName = newUser.displayName;
-        result.name = { familyName: newUser.familyName, givenName: newUser.givenName };
-        result.icon = newUser.icon;
-      }
-      await this.db.identity.create({
+    // 3. 이메일 없으면 새로운 계정 생성
+    if (!user) {
+      user = await this.db.user.create({
         data: {
+          username: data.email,
           email: data.email,
-          accountId: data.id,
-          provider: data.provider,
-          userId: user.id,
-        },
+          displayName: data.displayName,
+          familyName: data.name.familyName,
+          givenName: data.name.givenName,
+          icon: data.icon,
+          role: UserRole.USER
+        }
       });
     }
-    return result;
+
+    // 4. OAuth identity 생성
+    await this.db.identity.create({
+      data: {
+        email: data.email,
+        accountId: data.id,
+        provider: data.provider,
+        userId: user.id
+      }
+    });
+
+    return this.buildUserPayload(user);
   }
 
   async generateTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
     const accessToken = this.jwtService.sign(
       payload, //
-      { expiresIn: '5s' },
+      { expiresIn: '5s' }
     );
 
     const refreshToken = crypto.randomUUID();
@@ -130,8 +101,8 @@ export class AuthService {
         userId: payload.id,
         expiredAt: add(new Date(), { days: 7 }), // 7일 후
         userAgent,
-        ipAddress,
-      },
+        ipAddress
+      }
     });
     return { accessToken, refreshToken };
   }
@@ -139,7 +110,7 @@ export class AuthService {
   async rotateRefreshToken(refreshToken: string, ipAddress: string, userAgent: string) {
     const storedToken = await this.db.refreshToken.findUnique({
       where: { token: refreshToken },
-      include: { user: true },
+      include: { user: true }
     });
 
     if (!storedToken) {
@@ -150,7 +121,7 @@ export class AuthService {
     if (invalidToken) {
       await this.db.refreshToken
         .delete({
-          where: { id: storedToken.id },
+          where: { id: storedToken.id }
         })
         .then((r) => console.log('>> invalidToken:: delete', r.id));
       throw new CoreException(ErrorCode.INVALID_REFRESH);
@@ -158,7 +129,7 @@ export class AuthService {
 
     await this.db.refreshToken.update({
       where: { id: storedToken.id },
-      data: { revoked: true },
+      data: { revoked: true }
     });
 
     const { user } = storedToken;
@@ -168,7 +139,7 @@ export class AuthService {
       role: user.role,
       displayName: user.displayName,
       name: { familyName: user.familyName, givenName: user.givenName },
-      icon: user.icon,
+      icon: user.icon
     };
 
     return this.generateTokens(payload, ipAddress, userAgent);
@@ -180,18 +151,18 @@ export class AuthService {
     const baseOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined,
+      domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined
     };
 
     res.cookie(AUTHORIZATION, accessToken, {
       ...baseOptions,
       sameSite: 'lax',
-      path: '/',
+      path: '/'
     });
     res.cookie(REFRESH, refreshToken, {
       ...baseOptions,
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/auth/refresh'
     });
   }
 
@@ -200,19 +171,19 @@ export class AuthService {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined,
-      expires: new Date(0),
+      expires: new Date(0)
     };
 
     res.cookie(AUTHORIZATION, '', {
       ...baseOptions,
       sameSite: 'lax',
-      path: '/',
+      path: '/'
     });
 
     res.cookie(REFRESH, '', {
       ...baseOptions,
       sameSite: 'strict',
-      path: '/auth/refresh',
+      path: '/auth/refresh'
     });
   }
 
@@ -228,7 +199,7 @@ export class AuthService {
     }
 
     const token = await this.db.verification.findFirst({
-      where: { token: authCode, email, type, userId, verified: false },
+      where: { token: authCode, email, type, userId, verified: false }
     });
     if (!token) {
       throw new CoreException(ErrorCode.INVALID_TOKEN);
@@ -240,5 +211,16 @@ export class AuthService {
     }
 
     return true;
+  }
+
+  private buildUserPayload(user: User): IUserPayload {
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      displayName: user.displayName,
+      name: { familyName: user.familyName, givenName: user.givenName },
+      icon: user.icon
+    };
   }
 }
