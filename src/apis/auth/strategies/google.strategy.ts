@@ -1,23 +1,24 @@
-import { Strategy, Profile } from 'passport-google-oauth20';
+import { Profile, Strategy } from 'passport-google-oauth20';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { GOOGLE } from '@/common/config';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from '@/apis/auth/auth.service';
 import { IOAuth } from '@/apis/auth/interfaces';
 import { Provider } from '@prisma/client';
+import { UsersService } from '@/apis/users/users.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, GOOGLE) {
   constructor(
     configService: ConfigService,
-    private readonly authService: AuthService,
+    private readonly userService: UsersService
   ) {
     super({
       clientID: configService.get('GOOGLE_CLIENT_ID'),
       clientSecret: configService.get('GOOGLE_CLIENT_SECRET'),
       callbackURL: configService.get('GOOGLE_CALLBACK'),
       scope: ['email', 'profile'],
+      prompt: 'consent'
     });
   }
 
@@ -29,11 +30,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, GOOGLE) {
       provider: Provider.GOOGLE,
       icon: profile._json.picture,
       role: 'user',
-      displayName: profile._json.name,
+      displayName: profile._json.name
     };
 
-    const user = await this.authService.findOrCreateOAuthUser(data);
-    console.log('user', user);
-    return user;
+    const payload = await this.userService.findOrCreateOAuthUser(data);
+    console.log('payload', payload);
+    return payload;
+  }
+
+  authorizationParams(options: any): object {
+    options['prompt'] = 'select_account';
+    return options;
   }
 }

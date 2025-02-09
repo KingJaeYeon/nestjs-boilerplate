@@ -5,15 +5,17 @@ import { Request, Response } from 'express';
 import { GetUser, Public } from '@/apis/auth/decorators';
 import { LocalAuthGuard } from '@/apis/auth/guards';
 import { IUserPayload } from '@/apis/auth/interfaces';
-import { REFRESH } from '@/common/config';
+import { REFRESH, REFRESH_LOGOUT } from '@/common/config';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { GoogleAuthGuard } from '@/apis/auth/guards/google-auth.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Public()
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService, //
+    private readonly configService: ConfigService
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -22,7 +24,7 @@ export class AuthController {
     @GetUser() payload: IUserPayload,
     @Res({ passthrough: true }) res: Response,
     @Headers('userAgent') userAgent: string,
-    @Ip() ipAddress: string,
+    @Ip() ipAddress: string
   ) {
     const token = await this.authService.generateTokens(payload, userAgent, ipAddress);
     this.authService.setAuthCookies(res, token);
@@ -39,17 +41,19 @@ export class AuthController {
     @GetUser() payload: IUserPayload,
     @Res({ passthrough: true }) res: Response,
     @Headers('userAgent') userAgent: string,
-    @Ip() ipAddress: string,
+    @Ip() ipAddress: string
   ) {
     console.log('googleLoginCallback');
-    // const token = await this.authService.generateTokens(payload, userAgent, ipAddress);
-    // this.authService.setAuthCookies(res, token);
-    // return ResponseDto.success({ id: payload.id }, 'Login Successful', 201);
+    const token = await this.authService.generateTokens(payload, userAgent, ipAddress);
+    this.authService.setAuthCookies(res, token);
+    const webUrl = this.configService.get('WEB_URL');
+    return res.redirect(webUrl);
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
-    this.authService.clearAuthCookies(res);
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const refreshToken = req.cookies[REFRESH_LOGOUT];
+    await this.authService.clearAuthCookies(res, refreshToken);
     return ResponseDto.success(null, 'Logout Successful', 201);
   }
 
@@ -58,7 +62,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Headers('userAgent') userAgent: string,
-    @Ip() ipAddress: string,
+    @Ip() ipAddress: string
   ) {
     const refreshToken = req.cookies[REFRESH];
 

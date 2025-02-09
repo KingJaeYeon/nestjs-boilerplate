@@ -4,11 +4,11 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
-import { AUTHORIZATION, REFRESH } from '@/common/config';
+import { AUTHORIZATION, REFRESH, REFRESH_LOGOUT } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
-import { IUserPayload, IOAuth, IVerifyToken } from '@/apis/auth/interfaces';
+import { IUserPayload, IVerifyToken } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
-import { User, UserRole } from '@prisma/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -34,54 +34,6 @@ export class AuthService {
     if (!isValidPassword) {
       throw new CoreException(ErrorCode.INVALID_PASSWORD);
     }
-
-    return {
-      id: user.id,
-      displayName: user.displayName,
-      name: { familyName: user.familyName, givenName: user.givenName },
-      icon: user.icon,
-      email: user.email,
-      role: user.role
-    };
-  }
-
-  async findOrCreateOAuthUser(data: IOAuth): Promise<IUserPayload> {
-    // 1. 기존  "OAuth identity"로 사용자 찾기
-    let user = await this.db.userDao.findByIdentity(data.provider, data.id);
-
-    if (user) {
-      return this.buildUserPayload(user);
-    }
-
-    // 2. 기존 이메일 계정 찾기
-    user = await this.db.user.findUnique({
-      where: { email: data.email }
-    });
-
-    // 3. 이메일 없으면 새로운 계정 생성
-    if (!user) {
-      user = await this.db.user.create({
-        data: {
-          username: data.email,
-          email: data.email,
-          displayName: data.displayName,
-          familyName: data.name.familyName,
-          givenName: data.name.givenName,
-          icon: data.icon,
-          role: UserRole.USER
-        }
-      });
-    }
-
-    // 4. OAuth identity 생성
-    await this.db.identity.create({
-      data: {
-        email: data.email,
-        accountId: data.id,
-        provider: data.provider,
-        userId: user.id
-      }
-    });
 
     return this.buildUserPayload(user);
   }
@@ -132,15 +84,7 @@ export class AuthService {
       data: { revoked: true }
     });
 
-    const { user } = storedToken;
-    const payload: IUserPayload = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      displayName: user.displayName,
-      name: { familyName: user.familyName, givenName: user.givenName },
-      icon: user.icon
-    };
+    const payload: IUserPayload = this.buildUserPayload(storedToken.user);
 
     return this.generateTokens(payload, ipAddress, userAgent);
   }
@@ -164,26 +108,47 @@ export class AuthService {
       sameSite: 'strict',
       path: '/auth/refresh'
     });
+    res.cookie(REFRESH_LOGOUT, refreshToken, {
+      ...baseOptions,
+      sameSite: 'strict',
+      path: '/auth/logout'
+    });
   }
 
-  clearAuthCookies(res: Response) {
+  async clearAuthCookies(res: Response, refreshToken: string) {
+    if (refreshToken) {
+      const token = await this.db.refreshToken.findUnique({
+        where: { token: refreshToken }
+      });
+
+      if (token) {
+        await this.db.refreshToken.update({
+          where: { id: token.id },
+          data: { revoked: true }
+        });
+      }
+    }
+
     const baseOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       domain: process.env.NODE_ENV === 'production' ? '.referenceforall.com' : undefined,
       expires: new Date(0)
     };
-
     res.cookie(AUTHORIZATION, '', {
       ...baseOptions,
       sameSite: 'lax',
       path: '/'
     });
-
     res.cookie(REFRESH, '', {
       ...baseOptions,
       sameSite: 'strict',
       path: '/auth/refresh'
+    });
+    res.cookie(REFRESH_LOGOUT, '', {
+      ...baseOptions,
+      sameSite: 'strict',
+      path: '/auth/logout'
     });
   }
 
@@ -213,7 +178,7 @@ export class AuthService {
     return true;
   }
 
-  private buildUserPayload(user: User): IUserPayload {
+  buildUserPayload(user: User): IUserPayload {
     return {
       id: user.id,
       email: user.email,

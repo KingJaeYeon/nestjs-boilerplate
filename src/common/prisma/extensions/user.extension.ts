@@ -4,9 +4,13 @@ import { CoreException, ErrorCode } from '@/common/exception';
 // UserDao 타입 정의
 export interface UserDao {
   findByEmailOrThrow(email: string): Promise<User>;
+
   findByIdOrThrow(id: string): Promise<User | Error>;
+
   findByIdentity(provider: Provider, accountId: string): Promise<User | null>;
+
   throwIfEmailExists(email: string): Promise<void>;
+
   throwIfUsernameExists(username: string): Promise<void>;
 }
 
