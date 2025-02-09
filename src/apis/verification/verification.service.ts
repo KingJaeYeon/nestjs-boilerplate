@@ -55,17 +55,19 @@ export class VerificationService {
         email,
         userId,
         token,
-        expiredAt: addMinutes(new Date(), 30), // 30분 유효
-      },
+        expiredAt: addMinutes(new Date(), 30) // 30분 유효
+      }
     });
 
     return token;
   }
 
   async verifyToken(query: TokenDto): Promise<void> {
-    const { type, token } = query;
+    const { type, token, email } = query;
     const record = await this.db.verification.findUnique({
-      where: { token, type },
+      where: {
+        email_token_type: { email, token, type }
+      }
     });
 
     if (!record || record.type !== type) {
@@ -83,14 +85,14 @@ export class VerificationService {
 
   async cleanExpiredTokens(): Promise<void> {
     await this.db.verification.deleteMany({
-      where: { expiredAt: { lt: new Date() } },
+      where: { expiredAt: { lt: new Date() } }
     });
   }
 
   private async markTokenAsVerified(id: number): Promise<void> {
     await this.db.verification.update({
       where: { id },
-      data: { verified: true },
+      data: { verified: true }
     });
   }
 }

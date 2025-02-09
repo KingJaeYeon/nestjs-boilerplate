@@ -75,13 +75,14 @@ model Verification {
   type      VerificationType // 인증 요청의 유형
   email     String // 요청 대상 이메일
   userId    String?          @map("user_id") // 요청한 사용자 (선택적)
-  token     String           @unique // 고유 인증 토큰
+  token     String // 고유 인증 토큰
   expiredAt DateTime         @map("expired_at") // 만료 시간
   verified  Boolean          @default(false) // 인증 성공 여부
   createdAt DateTime         @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id])
 
+  @@unique([email, token, type])
   @@map("verifications")
 }
 
