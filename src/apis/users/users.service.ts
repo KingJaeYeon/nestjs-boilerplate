@@ -4,6 +4,7 @@ import { SignupDto } from './dto';
 import { AuthService } from '../auth/auth.service';
 import { Provider, UserRole, VerificationType } from '@prisma/client';
 import { IOAuth, IUserPayload } from '@/apis/auth/interfaces';
+import { CoreException, ErrorCode } from '@/common/exception';
 
 @Injectable()
 export class UsersService {
@@ -13,14 +14,17 @@ export class UsersService {
   ) {}
 
   async createUser(data: SignupDto) {
-    const { username, password, verifyCode } = data;
+    const { type, username, password, verifyCode, displayName = '' } = data;
 
-    await this.db.userDao.throwIfUsernameExists(username);
+    const alreadyExist = await this.db.user.findUnique({ where: { username } });
+    if (!!alreadyExist) {
+      throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
+    }
+
     const hashedPwd = await this.authService.hashPassword(password);
 
     // "username"이 이메일인 경우
-    const isEmail = username.includes('@');
-    if (isEmail) {
+    if (type === 'email') {
       await this.authService.verifiedToken({
         authCode: verifyCode,
         email: username,
@@ -33,6 +37,7 @@ export class UsersService {
           username,
           email: username,
           password: hashedPwd,
+          displayName,
           identity: {
             create: {
               accountId: username,
@@ -50,6 +55,7 @@ export class UsersService {
       data: {
         username,
         password: hashedPwd,
+        displayName,
         identity: {
           create: {
             accountId: username,

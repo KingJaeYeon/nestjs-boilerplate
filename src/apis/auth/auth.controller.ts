@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, Ip, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Ip, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ResponseDto } from '@/common/response.dto';
 import { Request, Response } from 'express';
@@ -73,5 +73,11 @@ export class AuthController {
     const token = await this.authService.rotateRefreshToken(refreshToken, ipAddress, userAgent);
     this.authService.setAuthCookies(res, token);
     return ResponseDto.success(null, 'RefreshToken rotated', 201);
+  }
+
+  @Public()
+  @Post('valid-username')
+  async validUsername(@Body('username') username: string) {
+    return this.authService.validUsername(username);
   }
 }

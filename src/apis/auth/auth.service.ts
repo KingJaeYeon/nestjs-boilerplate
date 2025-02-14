@@ -32,7 +32,7 @@ export class AuthService {
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      throw new CoreException(ErrorCode.INVALID_PASSWORD);
+      throw new CoreException(ErrorCode.INVALIDATE_LOGIN);
     }
 
     return this.buildUserPayload(user);
@@ -187,5 +187,21 @@ export class AuthService {
       name: { familyName: user.familyName, givenName: user.givenName },
       icon: user.icon
     };
+  }
+
+  async validUsername(username: string) {
+    if (!username) {
+      throw new CoreException(ErrorCode.EMPTY);
+    }
+    if (username.length < 4) {
+      throw new CoreException(ErrorCode.MINLENGTH);
+    }
+
+    const user = await this.db.user.findUnique({
+      where: { username }
+    });
+    if (user) {
+      throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
+    }
   }
 }
