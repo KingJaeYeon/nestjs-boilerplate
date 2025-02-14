@@ -6,5 +6,6 @@ import { VerificationCleanerService } from '@/apis/verification/verification-cle
 @Module({
   controllers: [VerificationController],
   providers: [VerificationService, VerificationCleanerService],
+  exports: [VerificationService]
 })
 export class VerificationModule {}

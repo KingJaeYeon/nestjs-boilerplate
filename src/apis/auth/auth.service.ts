@@ -9,6 +9,7 @@ import { LoginDto } from '@/apis/auth/dto';
 import { IUserPayload, IVerifyToken } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
 import { User } from '@prisma/client';
+import { VerificationService } from '@/apis/verification/verification.service';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,8 @@ export class AuthService {
 
   constructor(
     private readonly db: PrismaService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly verificationService: VerificationService
   ) {}
 
   async validateLocalUser(data: LoginDto): Promise<IUserPayload> {
@@ -202,6 +204,11 @@ export class AuthService {
     });
     if (user) {
       throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (emailRegex.test(username)) {
+      await this.verificationService.sendSignupMail(username);
     }
   }
 }

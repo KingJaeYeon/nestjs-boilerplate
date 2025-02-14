@@ -1,16 +1,47 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { addMinutes } from 'date-fns';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { CreateTokenDto, TokenDto } from '@/apis/verification/dto';
+import * as nodemailer from 'nodemailer';
+import { ConfigService } from '@nestjs/config';
+import { VerificationType } from '@prisma/client';
 
 @Injectable()
 export class VerificationService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(
+    private readonly db: PrismaService,
+    private readonly configService: ConfigService
+  ) {}
 
-  generateToken(): string {
-    return crypto.randomBytes(32).toString('base64');
+  generateToken({ type = 'base64' }: { type?: 'base64' | 'string' } = {}): string {
+    const base64 = crypto.randomBytes(32).toString('base64');
+    const string = Math.random().toString(36).slice(2, 13);
+    return type === 'base64' ? base64 : string;
+  }
+
+  async sendSignupMail(email: string) {
+    const isExistUser = await this.db.user.findUnique({
+      where: { email }
+    });
+
+    if (!!isExistUser) {
+      throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
+    }
+    const token = await this.createVerification(
+      { type: VerificationType.EMAIL_VERIFICATION, email },
+      'string'
+    );
+
+    const template = `<div>
+                <h2>Referenceforall signup code</h2>
+                <div class="email" style="font-size: 1.1em;">Email : ${email}</div>
+                <div class="message" style="font-size: 1.1em;">code : </div>
+                <pre class="message" style="font-size: 1.2em;">${token}</pre>
+            </div>`;
+
+    this.sendMail(email, { subject: 'signup verify code', template });
   }
 
   async sendVerificationEmail(data: CreateTokenDto): Promise<void> {
@@ -41,9 +72,12 @@ export class VerificationService {
     // });
   }
 
-  async createVerification(data: CreateTokenDto): Promise<string> {
+  async createVerification(
+    data: CreateTokenDto,
+    tokenType: 'base64' | 'string' = 'base64'
+  ): Promise<string> {
     const { userId, type, email } = data;
-    const token = this.generateToken();
+    const token = this.generateToken({ type: tokenType });
 
     // 이전 인증 요청 제거 (중복 방지)
     await this.db.verification.deleteMany({ where: { type, email, verified: false } });
@@ -94,5 +128,35 @@ export class VerificationService {
       where: { id },
       data: { verified: true }
     });
+  }
+
+  private sendMail(
+    email: string,
+    content: {
+      subject: string;
+      file?: any;
+      template: string;
+    }
+  ) {
+    const from = this.configService.get('MAIL_FROM');
+    const transporter = nodemailer.createTransport({
+      port: 587,
+      host: 'smtp.gmail.com',
+      auth: {
+        user: from, //송신할 이메일
+        pass: this.configService.get('MAIL_PASS')
+      }
+    });
+    const mailOptions = {
+      from: from, //송신할 이메일
+      to: email, //수신할 이메일
+      subject: content.subject,
+      html: content.template,
+      attachments: content.file
+    };
+    transporter
+      .sendMail(mailOptions)
+      .then(() => console.log('저장 및 발송 성공'))
+      .catch(() => console.log('에러'));
   }
 }

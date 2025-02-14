@@ -7,6 +7,7 @@ import { JwtStrategy, LocalStrategy } from '@/apis/auth/strategies';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { GoogleStrategy } from '@/apis/auth/strategies/google.strategy';
 import { UsersModule } from '@/apis/users/users.module';
+import { VerificationModule } from '@/apis/verification/verification.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { UsersModule } from '@/apis/users/users.module';
         secret: configService.get<string>('JWT_SECRET')
       })
     }), //
-    PassportModule
+    PassportModule,
+    VerificationModule
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],

@@ -15,12 +15,12 @@ import { VerificationModule } from './apis/verification/verification.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     ThrottlerModule.forRoot([
-      { ttl: 60, limit: 60, skipIf: () => !!process.env.NODE_ENV === false },
+      { ttl: 60, limit: 60, skipIf: () => !!process.env.NODE_ENV === false }
     ]),
     PrismaModule,
     UsersModule,
     AuthModule,
-    VerificationModule,
+    VerificationModule
   ],
   controllers: [AppController],
   providers: [
@@ -28,7 +28,7 @@ import { VerificationModule } from './apis/verification/verification.module';
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
-  ],
+    { provide: APP_GUARD, useClass: RolesGuard }
+  ]
 })
 export class AppModule {}
