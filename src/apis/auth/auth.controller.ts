@@ -9,13 +9,16 @@ import { REFRESH, REFRESH_LOGOUT } from '@/common/config';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { GoogleAuthGuard } from '@/apis/auth/guards/google-auth.guard';
 import { ConfigService } from '@nestjs/config';
+import { VerifySignupCodeDto } from '@/apis/auth/dto/verify-signup-code.dto';
+import { VerificationService } from '@/apis/verification/verification.service';
 
 @Public()
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService, //
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly verificationService: VerificationService
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -79,5 +82,17 @@ export class AuthController {
   @Post('valid-username')
   async validUsername(@Body('username') username: string) {
     return this.authService.validUsername(username);
+  }
+
+  @Public()
+  @Post('valid-email')
+  async validSignupCode(@Body() data: VerifySignupCodeDto) {
+    return this.authService.validEmail(data);
+  }
+
+  @Public()
+  @Post('send-signup-code')
+  async resendSignupCode(@Body('username') username: string) {
+    return this.verificationService.sendSignupMail(username);
   }
 }

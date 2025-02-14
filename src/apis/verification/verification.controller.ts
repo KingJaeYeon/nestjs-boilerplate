@@ -2,16 +2,10 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { VerificationService } from '@/apis/verification/verification.service';
 import { CreateTokenDto, TokenDto } from '@/apis/verification/dto';
 import { ResponseDto } from '@/common/response.dto';
-import { CreateSignupCodeDto } from '@/apis/verification/dto/create-signup-code.dto';
 
 @Controller('verification')
 export class VerificationController {
   constructor(private verificationService: VerificationService) {}
-
-  @Post('signup-code')
-  async sendSignupCode(@Body() data: CreateSignupCodeDto) {
-    await this.verificationService.sendSignupMail(data.email);
-  }
 
   // 인증 요청 생성
   @Post('send-email')

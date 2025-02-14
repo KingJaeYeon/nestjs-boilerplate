@@ -98,11 +98,7 @@ export class VerificationService {
 
   async verifyToken(query: TokenDto): Promise<void> {
     const { type, token, email } = query;
-    const record = await this.db.verification.findUnique({
-      where: {
-        email_token_type: { email, token, type }
-      }
-    });
+    const record = await this.findToken({ email, token, type });
 
     if (!record || record.type !== type) {
       console.error(`Token not found or type mismatch. Token: ${token}, Type: ${type}`);
@@ -158,5 +154,21 @@ export class VerificationService {
       .sendMail(mailOptions)
       .then(() => console.log('저장 및 발송 성공'))
       .catch(() => console.log('에러'));
+  }
+
+  async findToken({
+    email,
+    token,
+    type
+  }: {
+    email: string;
+    token: string;
+    type: VerificationType;
+  }) {
+    return this.db.verification.findUnique({
+      where: {
+        email_token_type: { email, token, type }
+      }
+    });
   }
 }

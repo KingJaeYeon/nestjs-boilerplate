@@ -8,8 +8,9 @@ import { AUTHORIZATION, REFRESH, REFRESH_LOGOUT } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
 import { IUserPayload, IVerifyToken } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
-import { User } from '@prisma/client';
+import { User, VerificationType } from '@prisma/client';
 import { VerificationService } from '@/apis/verification/verification.service';
+import { VerifySignupCodeDto } from '@/apis/auth/dto/verify-signup-code.dto';
 
 @Injectable()
 export class AuthService {
@@ -210,5 +211,13 @@ export class AuthService {
     if (emailRegex.test(username)) {
       await this.verificationService.sendSignupMail(username);
     }
+  }
+
+  async validEmail(data: VerifySignupCodeDto) {
+    await this.verificationService.verifyToken({
+      email: data.email,
+      token: data.verify,
+      type: VerificationType.EMAIL_VERIFICATION
+    });
   }
 }
