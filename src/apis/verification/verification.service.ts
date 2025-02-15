@@ -15,7 +15,7 @@ export class VerificationService {
     private readonly configService: ConfigService
   ) {}
 
-  generateToken({ type = 'base64' }: { type?: 'base64' | 'string' } = {}): string {
+  generateEmailVerificationToken({ type = 'base64' }: { type?: 'base64' | 'string' } = {}): string {
     const base64 = crypto.randomBytes(32).toString('base64');
     const string = Math.random().toString(36).slice(2, 13);
     return type === 'base64' ? base64 : string;
@@ -77,7 +77,7 @@ export class VerificationService {
     tokenType: 'base64' | 'string' = 'base64'
   ): Promise<string> {
     const { userId, type, email } = data;
-    const token = this.generateToken({ type: tokenType });
+    const token = this.generateEmailVerificationToken({ type: tokenType });
 
     // 이전 인증 요청 제거 (중복 방지)
     await this.db.verification.deleteMany({ where: { type, email, verified: false } });
@@ -96,21 +96,22 @@ export class VerificationService {
     return token;
   }
 
-  async verifyToken(query: TokenDto): Promise<void> {
-    const { type, token, email } = query;
-    const record = await this.findToken({ email, token, type });
+  async verifyEmailToken(query: TokenDto): Promise<number> {
+    const { type, token, email, userId } = query;
+    const result = await this.findEmailVerificationToken({ email, token, type, userId });
 
-    if (!record || record.type !== type) {
+    if (!result) {
       console.error(`Token not found or type mismatch. Token: ${token}, Type: ${type}`);
       throw new CoreException(ErrorCode.INVALID_TOKEN);
     }
 
-    if (record.expiredAt < new Date()) {
-      console.error(`Token expired. Token: ${token}, Expired At: ${record.expiredAt}`);
+    const isExpired = result.expiredAt < new Date();
+    if (isExpired) {
+      console.error(`Token expired. Token: ${token}, Expired At: ${result.expiredAt}`);
       throw new CoreException(ErrorCode.TOKEN_EXPIRED);
     }
 
-    await this.markTokenAsVerified(record.id);
+    return result.id;
   }
 
   async cleanExpiredTokens(): Promise<void> {
@@ -119,7 +120,7 @@ export class VerificationService {
     });
   }
 
-  private async markTokenAsVerified(id: number): Promise<void> {
+  async markTokenAsVerified(id: number): Promise<void> {
     await this.db.verification.update({
       where: { id },
       data: { verified: true }
@@ -156,18 +157,24 @@ export class VerificationService {
       .catch(() => console.log('에러'));
   }
 
-  async findToken({
+  async findEmailVerificationToken({
     email,
     token,
-    type
+    type,
+    userId,
+    verified
   }: {
     email: string;
     token: string;
     type: VerificationType;
+    userId?: string;
+    verified?: boolean;
   }) {
     return this.db.verification.findUnique({
       where: {
-        email_token_type: { email, token, type }
+        email_token_type: { email, token, type },
+        ...(userId !== undefined && { userId }),
+        ...(verified !== undefined && { verified })
       }
     });
   }

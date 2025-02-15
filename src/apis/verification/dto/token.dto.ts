@@ -1,5 +1,5 @@
 import { VerificationType } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class TokenDto {
   @IsString()
@@ -12,4 +12,8 @@ export class TokenDto {
   @IsString()
   @IsNotEmpty()
   email: string;
+
+  @IsString()
+  @IsOptional()
+  userId?: string;
 }

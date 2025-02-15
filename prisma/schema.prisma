@@ -15,7 +15,7 @@ datasource db {
 
 model Identity {
   id        Int       @id @default(autoincrement())
-  userId    String
+  userId    String    @map("user_id")
   provider  Provider
   accountId String    @map("account_id") // LOCAL = email, OAuth2 = 고유 ID
   email     String? // 제공자가 반환한 이메일 (확인용)

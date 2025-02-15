@@ -17,7 +17,7 @@ export class VerificationController {
   @Get('verify')
   async verify(@Query() query: TokenDto) {
     try {
-      await this.verificationService.verifyToken(query);
+      await this.verificationService.verifyEmailToken(query);
       const redirectUrl = 'https://yourdomain.com/my/setting';
       const urls = {
         EMAIL_VERIFICATION: '',

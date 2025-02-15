@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { SignupDto } from './dto';
 import { AuthService } from '../auth/auth.service';
-import { Provider, UserRole, VerificationType } from '@prisma/client';
+import { Prisma, Provider, UserRole } from '@prisma/client';
 import { IOAuth, IUserPayload } from '@/apis/auth/interfaces';
 import { CoreException, ErrorCode } from '@/common/exception';
 
@@ -16,50 +16,24 @@ export class UsersService {
   async createUser(data: SignupDto) {
     const { type, username, password, verifyCode, displayName = '' } = data;
 
-    const alreadyExist = await this.db.user.findUnique({ where: { username } });
-    if (!!alreadyExist) {
-      throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
+    await this.throwIfUserExists({ where: { username } });
+
+    if (data.type === 'email') {
+      await this.authService.verifyEmailWithCode(username, verifyCode);
     }
 
     const hashedPwd = await this.authService.hashPassword(password);
-
-    // "username"이 이메일인 경우
-    if (type === 'email') {
-      await this.authService.verifiedToken({
-        authCode: verifyCode,
-        email: username,
-        type: VerificationType.EMAIL_VERIFICATION
-      });
-
-      return this.db.user.create({
-        select: { id: true },
-        data: {
-          username,
-          email: username,
-          password: hashedPwd,
-          displayName,
-          identity: {
-            create: {
-              accountId: username,
-              provider: Provider.LOCAL,
-              email: username
-            }
-          }
-        }
-      });
-    }
-
-    // "username" 일반 아이디인 경우
     return this.db.user.create({
-      select: { id: true },
       data: {
         username,
+        ...(type === 'email' && { email: username }),
         password: hashedPwd,
         displayName,
         identity: {
           create: {
             accountId: username,
-            provider: Provider.LOCAL
+            provider: Provider.LOCAL,
+            ...(type === 'email' && { email: username })
           }
         }
       }
@@ -105,5 +79,12 @@ export class UsersService {
     });
 
     return this.authService.buildUserPayload(user);
+  }
+
+  private async throwIfUserExists(args: Prisma.UserFindUniqueArgs): Promise<void> {
+    const user = await this.db.user.findUnique(args);
+    if (user) {
+      throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
+    }
   }
 }

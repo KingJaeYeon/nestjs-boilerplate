@@ -11,6 +11,7 @@ import { GoogleAuthGuard } from '@/apis/auth/guards/google-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { VerifySignupCodeDto } from '@/apis/auth/dto/verify-signup-code.dto';
 import { VerificationService } from '@/apis/verification/verification.service';
+import { ValidateUsernameDto } from '@/apis/auth/dto/validate-username.dto';
 
 @Public()
 @Controller('auth')
@@ -29,7 +30,7 @@ export class AuthController {
     @Headers('userAgent') userAgent: string,
     @Ip() ipAddress: string
   ) {
-    const token = await this.authService.generateTokens(payload, userAgent, ipAddress);
+    const token = await this.authService.generateJwtTokens(payload, userAgent, ipAddress);
     this.authService.setAuthCookies(res, token);
     return ResponseDto.success({ id: payload.id }, 'Login Successful', 201);
   }
@@ -47,7 +48,7 @@ export class AuthController {
     @Ip() ipAddress: string
   ) {
     console.log('googleLoginCallback');
-    const token = await this.authService.generateTokens(payload, userAgent, ipAddress);
+    const token = await this.authService.generateJwtTokens(payload, userAgent, ipAddress);
     this.authService.setAuthCookies(res, token);
     const webUrl = this.configService.get('WEB_URL');
     return res.redirect(webUrl);
@@ -79,15 +80,15 @@ export class AuthController {
   }
 
   @Public()
-  @Post('valid-username')
-  async validUsername(@Body('username') username: string) {
-    return this.authService.validUsername(username);
+  @Post('validate/username')
+  async validUsername(@Body() { username }: ValidateUsernameDto) {
+    return this.authService.validateUsername({ username });
   }
 
   @Public()
-  @Post('valid-email')
+  @Post('validate/email')
   async validSignupCode(@Body() data: VerifySignupCodeDto) {
-    return this.authService.validEmail(data);
+    return this.authService.validateEmail(data);
   }
 
   @Public()

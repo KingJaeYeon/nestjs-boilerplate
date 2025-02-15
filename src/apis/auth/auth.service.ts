@@ -4,13 +4,14 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
-import { AUTHORIZATION, REFRESH, REFRESH_LOGOUT } from '@/common/config';
+import { AUTHORIZATION, emailRegex, REFRESH, REFRESH_LOGOUT } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
-import { IUserPayload, IVerifyToken } from '@/apis/auth/interfaces';
+import { IUserPayload } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';
 import { User, VerificationType } from '@prisma/client';
 import { VerificationService } from '@/apis/verification/verification.service';
 import { VerifySignupCodeDto } from '@/apis/auth/dto/verify-signup-code.dto';
+import { ValidateUsernameDto } from '@/apis/auth/dto/validate-username.dto';
 
 @Injectable()
 export class AuthService {
@@ -41,7 +42,7 @@ export class AuthService {
     return this.buildUserPayload(user);
   }
 
-  async generateTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
+  async generateJwtTokens(payload: IUserPayload, userAgent: string, ipAddress: string) {
     const accessToken = this.jwtService.sign(
       payload, //
       { expiresIn: '5s' }
@@ -89,7 +90,7 @@ export class AuthService {
 
     const payload: IUserPayload = this.buildUserPayload(storedToken.user);
 
-    return this.generateTokens(payload, ipAddress, userAgent);
+    return this.generateJwtTokens(payload, ipAddress, userAgent);
   }
 
   setAuthCookies(res: Response, tokens: { accessToken: string; refreshToken: string }) {
@@ -159,28 +160,6 @@ export class AuthService {
     return bcrypt.hash(password, 10);
   }
 
-  async verifiedToken(data: IVerifyToken): Promise<boolean | Error> {
-    const { authCode, email, type, userId } = data;
-    if (authCode === undefined) {
-      console.log('authCode is undefined');
-      throw new CoreException(ErrorCode.INVALID_TOKEN);
-    }
-
-    const token = await this.db.verification.findFirst({
-      where: { token: authCode, email, type, userId, verified: false }
-    });
-    if (!token) {
-      throw new CoreException(ErrorCode.INVALID_TOKEN);
-    }
-
-    const invalidToken = token.expiredAt < new Date();
-    if (invalidToken) {
-      throw new CoreException(ErrorCode.TOKEN_EXPIRED);
-    }
-
-    return true;
-  }
-
   buildUserPayload(user: User): IUserPayload {
     return {
       id: user.id,
@@ -192,32 +171,36 @@ export class AuthService {
     };
   }
 
-  async validUsername(username: string) {
-    if (!username) {
-      throw new CoreException(ErrorCode.EMPTY);
-    }
-    if (username.length < 4) {
-      throw new CoreException(ErrorCode.MINLENGTH);
-    }
-
-    const user = await this.db.user.findUnique({
-      where: { username }
-    });
+  async validateUsername({ username }: ValidateUsernameDto) {
+    const user = await this.db.user.findUnique({ where: { username } });
     if (user) {
       throw new CoreException(ErrorCode.USER_ALREADY_EXISTS);
     }
 
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (emailRegex.test(username)) {
+    const isEmail = emailRegex.test(username);
+    if (isEmail) {
       await this.verificationService.sendSignupMail(username);
     }
   }
 
-  async validEmail(data: VerifySignupCodeDto) {
-    await this.verificationService.verifyToken({
+  async verifyEmailWithCode(email: string, verifyCode: string): Promise<void> {
+    if (!emailRegex.test(email)) {
+      throw new CoreException(ErrorCode.INVALIDATE_EMAIL);
+    }
+
+    await this.verificationService.verifyEmailToken({
+      token: verifyCode,
+      email,
+      type: VerificationType.EMAIL_VERIFICATION
+    });
+  }
+
+  async validateEmail(data: VerifySignupCodeDto) {
+    const tokenId = await this.verificationService.verifyEmailToken({
       email: data.email,
       token: data.verify,
       type: VerificationType.EMAIL_VERIFICATION
     });
+    await this.verificationService.markTokenAsVerified(tokenId);
   }
 }

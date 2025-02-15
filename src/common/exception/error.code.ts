@@ -32,4 +32,5 @@ export class ErrorCode {
   static INVALIDATE_PASSWORD = createErrorCode('VALIDATE-001', 'error.auth.invalid_password', HttpStatus.BAD_REQUEST);
   static INVALIDATE_USERNAME = createErrorCode('VALIDATE-002', 'error.auth.invalid_username', HttpStatus.BAD_REQUEST);
   static INVALIDATE_TYPE = createErrorCode('VALIDATE-003', 'error.auth.invalid_type', HttpStatus.BAD_REQUEST);
+  static INVALIDATE_EMAIL = createErrorCode('VALIDATE-003', 'error.auth.email_invalid', HttpStatus.BAD_REQUEST);
 }
