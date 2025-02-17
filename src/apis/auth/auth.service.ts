@@ -4,7 +4,7 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { CoreException, ErrorCode } from '@/common/exception';
 import { JwtService } from '@nestjs/jwt';
 import { CookieOptions, Response } from 'express';
-import { AUTHORIZATION, emailRegex, REFRESH, REFRESH_LOGOUT } from '@/common/config';
+import { AUTHORIZATION, emailRegex, REFRESH, REFRESH_LOGOUT, usernameRegex } from '@/common/config';
 import { LoginDto } from '@/apis/auth/dto';
 import { IUserPayload } from '@/apis/auth/interfaces';
 import { add } from 'date-fns';

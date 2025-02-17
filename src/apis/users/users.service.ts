@@ -5,6 +5,7 @@ import { AuthService } from '../auth/auth.service';
 import { Prisma, Provider, UserRole } from '@prisma/client';
 import { IOAuth, IUserPayload } from '@/apis/auth/interfaces';
 import { CoreException, ErrorCode } from '@/common/exception';
+import { emailRegex, usernameRegex } from '@/common/config';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +16,14 @@ export class UsersService {
 
   async createUser(data: SignupDto) {
     const { type, username, password, verifyCode, displayName = '' } = data;
+
+    if (type === 'email' && !emailRegex.test(username)) {
+      throw new CoreException(ErrorCode.INVALIDATE_EMAIL);
+    }
+
+    if (type === 'username' && !usernameRegex.test(username)) {
+      throw new CoreException(ErrorCode.INVALIDATE_USERNAME);
+    }
 
     await this.throwIfUserExists({ where: { username } });
 
